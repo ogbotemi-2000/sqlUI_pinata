@@ -1,0 +1,426 @@
+<!DOCTYPE HTML>
+<html lang="en">
+<head>
+        <title>Neontech starter kit UI | Browser client for starter kit</title>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="css/tailwind.min.css">
+        <link rel="stylesheet" href="css/all.min.css">
+        <link rel="stylesheet" href="css/page.css">
+        <script src="js/ripples.js"></script>
+        <script src="js/utils.js"></script>
+        <script src="js/both.js"></script>
+        <script>
+let debug=/debug/.test(location.search), slice=arr=>[].slice.call(arr), qsa=str=>slice(document.querySelectorAll(str)),
+    uuid   = (a) => (a ? (a ^ ((Math.random() * 16) >> (a / 4))).toString(16) : ([1e7] + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, uuid)),
+page = {
+  setup: function(node, str) {
+    let ind=0, parts = both.dBParts(str), misc= {1:'user', 3:'host', 4:'port', 5:'database'};
+    page.asText(node, (n, r, nx)=>{
+      nx = n.nextSibling,
+      r=n.hasAttribute&&n.hasAttribute('contenteditable')||n.value!=void 0,
+      r&&nx&&nx.data&&(page.misc[misc[ind]]&&=parts[ind], n.value=n.textContent=parts[ind++])
+    })
+  },
+  i: 0,
+  templates: [`<span class="font-semibold text-pink-500 inline-block mb-1">SELECT</span>
+  table_cell_id, 
+  <span class="inline-block my-1 font-semibold text-pink-500">first_field</span>
+<span class="font-semibold text-pink-500 inline-block my-1">FROM</span>
+  table_name
+<span class="font-semibold text-pink-500 inline-block my-1">WHERE</span>
+  table_cell_id = <span class="font-semibold text-blue-400 inline-block">1</span>;`,
+`<span class="font-semibold text-pink-500 inline-block mb-1">UPDATE</span> table_name
+<span class="inline-block my-1 font-semibold text-pink-500">SET</span> first_field  = second_field
+<span class="font-semibold text-pink-500 inline-block my-1">WHERE</span> table_cell_id = 3
+<span class="font-semibold text-pink-500 inline-block my-1">RETURNING</span> *;`,
+`<span class="font-semibold text-pink-500 mb-2 inline-block">INSERT INTO</span> table_name (<span class="font-semibold text-pink-500 mb-2 inline-block">first_field, second_field</span>)
+<span class="font-semibold text-pink-500">VALUES</span>
+  (<span class="text-green-500 mb-2 inline-block">'Value one', '08-06-2024'</span>),
+  (<span class="text-green-500 mb-2 inline-block">'Value three', '12-01-2023'</span>),
+  (<span class="text-green-500 mb-2 inline-block">'Value five', '10-12-2020'</span>)
+<span class="font-semibold text-pink-500 mb-2 inline-block">RETURNING</span> *;`,
+`<span class="font-semibold text-pink-500 mb-2 inline-block">ALTER TABLE</span> table_name
+<span class="font-semibold text-pink-500">ADD COLUMN</span> table_cell_id <label class="input-sizer inline-grid font-semibold"><input type="text" spellcheck="false" oninput="this.parentNode.dataset.value = this.value" size="7" value="SERIAL" placeholder="TYPE" list="types" class="outline-none border-b border-current text-yellow-500"></label> <span class="font-semibold text-pink-500">PRIMARY KEY</span>;`,
+
+`<span class="font-semibold text-pink-500">CREATE TABLE</span> table_name (<br>
+  table_cell_id <label class="input-sizer inline-grid font-semibold"><input type="text" spellcheck="false" oninput="this.parentNode.dataset.value = this.value" size="7" value="SERIAL" placeholder="TYPE" list="types" class="outline-none border-b border-current text-yellow-500 p-1"></label> PRIMARY <span class="font-semibold text-pink-500">KEY</span>,
+  first_field  <label class="input-sizer inline-grid font-semibold"><input type="text" spellcheck="false" oninput="this.parentNode.dataset.value = this.value" size="14" value="VARCHAR(255)" placeholder="TYPE" list="types" class="outline-none border-b border-current text-yellow-500 p-1"></label><span class="font-semibold text-pink-500"> NOT </span><span class="font-semibold text-blue-400">NULL</span>,
+  second_field <label class="input-sizer inline-grid font-semibold"><input type="text" spellcheck="false" oninput="this.parentNode.dataset.value = this.value" size="5" value="DATE" placeholder="TYPE" list="types" class="outline-none border-b border-current text-yellow-500 p-1"></label><span class="font-semibold text-pink-500"> NOT </span><span class="font-semibold text-blue-400">NULL</span>
+);`,
+`<span class="font-semibold text-pink-500 mb-2 inline-block">ALTER TABLE</span> table_name
+<span class="font-semibold text-pink-500">DROP CONSTRAINT</span> table_cell_id;`],
+asText: function(node, fn, txt='', _txt, cb) {
+    (cb=(nodes, flag, bool)=>slice(nodes).forEach((ch, res)=>{
+      res = ch.data || ch.value || '',
+      txt += bool = fn&&fn.call ? fn(ch) : res,
+      !bool&&ch.childNodes.length&&cb(ch.childNodes, !0)
+    }))(node.childNodes);
+    return txt
+  }
+};
+</script>
+
+<style>
+.out-in-out {
+  --dur: 2s;
+  --x: -101%;
+  animation: out-in-out var(--dur) ease-in-out forwards;
+}
+@keyframes out-in-out {
+  from {
+    transform: translate3d(var(--x), 0px, 0px)
+  }
+  to {
+    transform: translate3d(calc(var(--x) * -1), 0px, 0px)
+  }
+}
+
+.bg-near-black {
+  background: #282828;
+}
+.affix {
+  position: fixed;
+  top: 1em;
+}
+.input-sizer::after {
+  content: attr(data-value) " ";
+  visibility: hidden;
+  white-space: pre-wrap;
+}
+
+.dots-1 {
+  --_g: no-repeat radial-gradient(circle closest-side,#000 90%,#0000);
+  background: 
+    var(--_g) 0    0,
+    var(--_g) 0    100%,
+    var(--_g) 100% 100%;
+  background-size: 40% 40%;
+  animation:d1 1s infinite linear;
+}
+@keyframes d1 {
+    25% {background-position:100% 0   ,0 100%,100% 100%}
+    50% {background-position:100% 0   ,0 0   ,100% 100%}
+    75% {background-position:100% 0   ,0 0   ,0    100%}
+    100%{background-position:100% 100%,0 0   ,0    100%}
+}
+    html {
+    scroll-behavior: smooth;
+}
+@keyframes anim-round { 0%,100% { transform: translate3d(var(--_reach), 0px, 0px); } 25% { transform: translate3d(0px, var(--_reach), 0px); } 50% { transform: translate3d(var(--reach), 0px, 0px); } 75% { transform: translate3d(0px, var(--reach), 0px); } }
+.bg-squiggle {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 6 3' enable-background='new 0 0 6 3' width='6' height='3' fill='%23facc15'%3e%3cpolygon points='5.5%2c0 2.5%2c3 1.1%2c3 4.1%2c0'/%3e%3cpolygon points='4%2c0 6%2c2 6%2c0.6 5.4%2c0'/%3e%3cpolygon points='0%2c2 1%2c3 2.4%2c3 0%2c0.6'/%3e%3c/svg%3e");
+}
+.draw-stroke {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: draw-stroke 1s ease-out infinite alternate;
+}
+@keyframes draw-stroke {
+    0% {
+    stroke-dashoffset: 1;
+}
+
+100% {
+    stroke-dashoffset: 0;
+}
+    }
+@font-face {
+    font-family: 'Capsmall_clean';
+    font-style: normal;
+    font-weight: normal;
+    src: local('fonts/Capsmall_clean'), url('fonts/Capsmall_clean.woff') format('woff');
+		}
+    .font-capture {
+      font-family: Capsmall_clean;
+    }
+    *:hover > .decorate > div, chrome .decorate-parent:hover > .decorate > div {
+                --tw-scale-x: 8;
+                --tw-scale-y: 8;
+                transform: scale3d(var(--tw-scale-x),var(--tw-scale-y),1);
+                --tw-bg-opacity: 0.15;
+            }
+
+            * > .decorate.out > div, .decorate-parent > .decorate.out > div {
+                --tw-scale-x: 8;
+                --tw-scale-y: 8;
+            }
+
+            *:hover > .decorate.out > div, .decorate-parent:hover > .decorate.out > div {
+                --tw-scale-x: 1;
+                --tw-scale-y: 1
+            }
+        </style>
+    </head>
+    <body>
+      <aside id="configure" style="--tw-bg-opacity:0.25; z-index: 2;" class="tooltip no-hover no-focus no-focus-within -slide-y bg-gray-100 flex items-center justify-center text-center inset-0 backdrop-blur-sm backdrop-filter fixed">
+        <section class="relative p-6 rounded-lg shadow bg-white inline-block text-sm font-bold text-sm text-left mx-6 text-gray-800">Database Connection String
+          <!-- do not add nodes before the element below here except textNodes in order to ensure proper behaviour -->
+          <main class="[&amp;>*]:inline-block" oninput="let type=event.inputType, tx=str=Abbr.to(event.target, ['tC', 'value'], !0); type==='insertFromPaste'&&page.setup(this, tx)">
+              <label class="relative"><div class="font-normal text-xs w-full text-center">SQL RDBMS</div><input class="outline-none font-semibold border-b border-current" list="rdbms" size="8" spellcheck="false">://<datalist id="rdbms"><option value="mysql"></option><option value="postgresql"></option></datalist></label><label class="relative"><div class="left-0 font-normal text-xs text-center">User</div><div class="mx-1 inline-block text-left outline-none font-semibold border-b border-current" spellcheck="false" contenteditable="true" data-placeholder="user, i.e root"></div>:</label><label class="relative"><div class="font-normal text-xs text-center">Database password</div><input class="mx-1 outline-none font-semibold border-b border-current text-center" list="rdbms" spellcheck="false" type="password" size="12">@</label><label class="mt-2 relative"><div class="left-0 font-normal text-xs text-center">Host</div><div class="mx-1 outline-none font-semibold border-b border-current inline-block" spellcheck="false" contenteditable="true" data-placeholder="hostname"></div>:</label><label class="relative"><div class="font-normal text-xs text-center">Port</div><input class="outline-none font-semibold border-b border-current mx-1" size="3" spellcheck="false">/</label><label class="mr-2 mt-2 relative"><div class="left-0 font-normal text-xs text-center">Database</div><div class="outline-none font-semibold border-b border-current inline-block mx-1" spellcheck="false" contenteditable="true" data-placeholder="name"></div>?</label><label class="mt-2 relative"><div class="left-0 font-normal text-center text-xs">key, value pairs</div><div class="outline-none font-semibold border-b border-current mx-1" spellcheck="false" contenteditable="true" data-placeholder="key1=value1&amp;key2=value2"></div>
+              </label><!--leave a whitespace here for proper behaviour of custom database URL--> </main>
+  
+              <p class="mt-2 font-normal"><i class="fa fa-exclamation p-1 rounded-full border px-2 mr-1 border-gray-500"></i><i>You may paste a complete database connection string into any input field except the first to autofill the rest</i></p>
+          <div class="mt-3 text-right w-full">
+            <button class="mt-3 -mr-6 p-3 rounded-l-full bg-green-200 px-5 ripple relative" onclick="let flag, text=page.asText(Abbr.to(this, [{2:'pN'}, 'fEC']), (n, r, nx)=>{
+              nx = n.nextSibling,
+              r=n.hasAttribute&&n.hasAttribute('contenteditable')&&n.textContent||n.value;
+              r&&=nx&&nx.data&&r+nx.data;
+              return r||''
+          }).trim().replace(/\?$/, ''); flag=account.setup.value!=text, text&&(account.query.value='', account.setup.value=text, flag&&(bugs.classList.remove('show'), account.submit()), this.disabled=true, Abbr.to(this, ['fEC', 'cL']).add('out-in-out'))">
+                <div onanimationend="Abbr.to(this, 'pN').disabled=false, Abbr.to(this, [{4:'pN'}, 'cL']).remove('show'), Abbr.to(this, 'cL').remove('out-in-out')" class="absolute inset-0 bg-yellow-500 transform-gpu -translate-x-full" style="--dur:12s;"></div>
+                <span class="relative">configure app</span>
+              </button></div>
+              <button onclick="Abbr.to(this, [{2:'pN'}, 'cL']).remove('show')" class="ripple border-t border-r border-gray-700 bottom-0 left-0 absolute p-4 px-6 rounded-tr-lg rounded-bl-lg">close</button>
+              </section>
+      </aside>
+
+      <section class="mb-24 sm:mb-32 w-full mt-1 p-10 md:w-4/5 m-auto border-r sm:border-gray-300 border-l">
+        <i class="fa fa-database text-xl text-gray-600 mr-3"></i><code class="skeleton p-1 rounded-full font-semibold">database</code>
+        <p class="my-2 py-3 skeleton italic rounded-full"></p>
+        <form id="account" target="response" method="post" action="api/accountData" onsubmit="/*event.preventDefault(), */console.log('::SUBMIT::', event), bugs.classList.remove('show')" class='align-middle inline-block mr-56 mb-6'>
+          <input type="text" name="query" class="hidden">
+          <input type="text" name="setup" class="hidden">
+          <input type="text" name="pinata" class="hidden">
+          <!--the input elements above is not rendered but instead used as an ever present part of the request body -->
+          <label id="pooled" class="duration-500 top-0 ease-out align-middle toggle-wrapper switch z-1" style="--slider-checked-color:gray; --switch-size:15px;" role="button">
+            <input type="checkbox" name="pooled" oninput="sendQuery.disabled=0/*for when pooling causes errors */">
+            <div class="show text-sm p-1.5 tooltip to-right flex align-middle absolute rounded bg-white shadow items-center justify-center text-current p-0.5 text-center" data-details="[inactive]"
+            style="--arrow-size:5px; z-index: auto;">
+              <br>
+            <hr class="mx-1.5 bulge-center border-0 p-0.5 h-full py-3 border-transparent">
+            <p class="whitespace-pre">pooled connection</p>
+          </div>
+          <span class="slider"></span>
+          <br>
+          <i class="bg-white absolute right-full dots-1 inline-block top-0 mr-2 p-2" id="loader1"></i>
+        </label>
+      </form>
+      <section class="align-middle inline-block [&>*]:text-center [&>*]:align-middle [&>*]:inline-block mt-2">
+        <div>
+          <p class="px-4 text-sm mb-2">server address</p>
+          <code id="server_addr" class="inline-block"></code>
+        </div>
+        <hr class="mx-4 p-px h-11 border-0 bg-gray-700">
+        <div>
+          <p class="px-4 text-sm mb-2">server port</p>
+          <code id="server_port" class="px-4 inline-block"></code>
+        </div>
+      </section>
+      
+      <h3 class="mt-10 font-semibold text-gray-600">Execute Queries <span class="font-normal">(the templates are editable)</span></h3>
+      <div class="my-4 m-2 inline-block [&amp;>*]:p-xy" style="--px:1.2rem; --py:0.6rem;" onclick="let t=event.target, i, ch; if(t.tagName.toLowerCase()!=='button') return; Abbr.to(result, 'cL').remove('show'), (ch=[].slice.call(this.children)).forEach(e=>e.classList[t===e?'add':'remove']('border-2')), ~(i=ch.indexOf(t))&&(page.i!=i)&&(sendQuery.disabled=0, queries.innerHTML = page.templates[i], page.i=i)">
+        <button class="ripple relative rounded-l-md border-r-2 border-gray-400 border-2">
+          <i class="fa fa-mouse-pointer mr-2"></i>select</button><button class="ripple relative border-l-2 border-r-2 border-gray-400">
+          <i class="fa fa-edit mr-2"></i>update</button><button class="ripple relative border-l-2 border-r-2 border-gray-400">
+            <i class="fa fa-fill-drip mr-2"></i>insert</button><button class="ripple relative border-l-2 border-r-2 border-gray-400">
+              alter<i class="fa fa-pencil-alt ml-2"></i></button><button class="ripple relative border-r-2 border-l-2 border-gray-400">create
+          <i class="fa fa-plus ml-2"></i></button><button class="ripple relative rounded-r-md border-l-2 border-gray-400">
+          delete<i class="ml-2 fa fa-trash-alt"></i></button>
+      </div>
+
+      <main class="mb-0 sm:mx-0 -mx-9 relative shadow border rounded-3xl border-gray-300">
+<pre id="queries" contenteditable oninput="account.setup.value&&(sendQuery.disabled=0)" spellcheck="false" class="duration-700 ease-out rounded-t-3xl p-8 border-b-2 border-gray-300 w-full inline-block">
+<span class="font-semibold text-pink-500 inline-block mb-1">SELECT</span>
+  table_cell_id, 
+  <span class="inline-block my-1 font-semibold text-pink-500">first_field</span>
+<span class="font-semibold text-pink-500 inline-block my-1">FROM</span>
+  table_name
+<span class="font-semibold text-pink-500 inline-block my-1">WHERE</span>
+  table_cell_id = <span class="font-semibold text-blue-400 inline-block">1</span>;
+</pre>
+  <button id="sendQuery" disabled class="align-middle relative text-sm ml-4 my-2" onclick="let txt=Abbr.to(this, {2:'lC'}), query=page.asText(queries).replace(/\n+/g, ' ').trim(); query+=';'.repeat(!/;$/.test(query)), query&&(page.templates[page.i] = queries.innerHTML, this.disabled=txt.data='awaiting query results....', Abbr.to(this, ['nES','cL']).replace('absolute', 'show'), bugs.classList.remove('show'), result.classList.remove('show'), account.query.value=query, account.submit())">
+    <div class="mt-0.5 -ml-px absolute h-1/2 w-1/5 rounded-tl-full border-t border-l border-current top-0 left-0"></div>
+    <div class="mt-2 rounded-3xl overflow-hidden absolute inset-0 text-green-400 m-1 mb-2"><div style="transform-origin: bottom; animation-duration: 3s; transform-origin: top right" class="w-1/3 top-1/2 origin-center bg-gradient-to-r from-transparent via-current to-tansparent absolute animate-spin p-10"></div></div>
+<div class="absolute h-1/2 w-1/4 rounded-br-full bottom-0 right-0 border-b border-r border-current mb-0.5 -mr-0.5"></div>
+<div class="hover:bg-green-100 mt-3 m-2 mx-1 relative inline-block  p-2 px-3 rounded-3xl bg-gray-100 ripple backdrop-filter backdrop-blur ripple text-current">
+  <i class="fa fa-cog inline-block align-middle pointer-events-none"></i>
+  <i class="fa fa-database inline-block align-middle mr-2 pointer-events-none"></i>apply query to database</div></button>
+  <div class="ml-4 absolute inline-block no-hover no-focus slide tooltip">
+    <svg class="mr-1 inline-block w-8 align-middle text-red-600" viewBox="0 0 384 512">
+      <path pathLength="1" style="fill:orange;" class="draw-stroke" stroke-width="30" stroke="currentColor" d="M216 23.86c0-23.8-30.65-32.77-44.15-13.04C48 191.85 224 200 224 288c0 35.63-29.11 64.46-64.85 63.99-35.17-.45-63.15-29.77-63.15-64.94v-85.51c0-21.7-26.47-32.23-41.43-16.5C27.8 213.16 0 261.33 0 320c0 105.87 86.13 192 192 192s192-86.13 192-192c0-170.29-168-193-168-296.14z"></path>
+    </svg>
+    <i>keepin it hot...</i>
+  </div>
+  <button id="result" style="z-index:auto" onclick="Abbr.to(this, ['nES', 'cL']).add('show')" class="ripple tooltip no-hover no-focus no-focus-within slide-y absolute top-0 right-0 border-b border-l border-gray-300 bg-gray-100 shadow p-3 rounded-bl-2xl px-4 hover:bg-gray-200 rounded-tr-2xl">show query result</button>
+  <!-- result of database will be displayed via this element by clicking on the button above-->
+<aside class="no-focus-within p-8 left-0 bg-gray-100 h-full w-full tooltip no-hover no-focus slide-y absolute top-0">
+  <h4 class="font-semibold mb-4">Non-empty result of query</h4>
+  <pre tabindex="0" class="w-full h-full overflow-scroll word-break whitespace-pre-wrap pb-8"></pre>
+  <div class="absolute top-6 right-10">
+    <button class="p-3 rounded-l-full border border-gray-700 ripple relative" onclick="copyTextToClipboard(Abbr.to(this, ['pN', 'pES',   'tC']))">
+      <div class="bg-gray-50 text-current p-2 absolute tooltip no-hover to-top" style="--arrow-size:5px;--x: -50%;--y: -3px;">copied</div>
+      <i class="fa-copy fa mr-2"></i> copy result</button>
+    <button onclick="Abbr.to(this, [{2:'pN'}, 'cL']).remove('show')" class="relative p-3 rounded-r-full border border-gray-700 ripple">
+      <i class="fa-times fa mr-2"></i> close</button>
+  </div>
+
+</aside>
+    </main>
+    </section>
+
+    <aside id="bugs" class="fixed bottom-20 tooltip no-focus no-hover no-focus-within slide left-3">
+      <article style="z-index: auto;" class="bg-white text-sm p-3 absolute bottom-0 left-0 border border-gray-300 rounded-3xl -m-1.5 pt-8 tooltip no-hover no-focus slide-y">
+        <h3 class="font-semibold text-gray-600 whitespace-pre mx-3">Starter kit is bedevilled by <code>&lt;N&gt; errors</code></h3>
+<hr class="my-1 w-1/2 m-auto">
+<ul class="px-2 overflow-scroll mb-16 pb-4 list-disc list-inside space-y-4" style="max-height:50vh;"></ul>
+      </article>
+      <div class="text-left relative inline-block rounded-full align-middle text-red-500">
+        <div class="rounded-inherit overflow-hidden absolute inset-1"><div style="transform-origin: bottom; animation-duration: 3s;" class="left-1/3 bg-gradient-to-r from-transparent via-current to-tansparent h-full bottom-1/4 w-1/2 absolute animate-spin"></div></div>
+        <button class="ripple m-2 inline-block p-5 bg-white rounded-inherit text-current fa md:text-2xl text-xl relative hover:bg-black fa-bug text-current duration-300 ease-out" onclick="Abbr.to(this, ['pN','pES','cL']).toggle('show')"></button>
+        <aside class="bg-gray-50 font-mono border text-sm whitespace-pre absolute show p-2 tooltip to-right" style="--arrow-size:5px;">error(s)</aside>
+      </div>
+    </aside>
+
+    <aside class="flex items-end justify-between fixed right-0 left-0 bottom-0 px-3 sm:justify-around pb-5 text-center text-sm">
+      <div class="relative m-2 right-0">
+        <p class="bg-gray-100 shadow-inner z-1 relative p-2 px-3 text-sm rounded-lg rounded-l-2xl border"><i class="fa fa-code text-gray-500 text-xl sm:text-base"></i><span class="ml-2 tooltip no-hover no-focus no-focus-within slide sm:show sm:relative absolute">attributions</span></p>
+        <div style="z-index: auto;" class="pb-10 text-sm p-4 bg-gray-200 left-0 bottom-0 shadow tooltip absolute rounded-lg w-40">
+          <a target="_blank" href="https://css-tricks.com/single-element-loaders-the-dots/"><i class="inline-block p-2 dots-1 text-gray-600"></i> • Temani Afif</a>
+          <hr class="my-2">
+          <a target="_blank" href="https://uiverse.io/profile/Voxybuns"><label class="switch" style="--slider-checked-color:gray;--switch-size:12px;"><span class="slider"></span></label> • Voxybuns</a>
+        </div>
+      </div>
+
+      <button class="relative rounded-xl p-4 bg-gray-200 ripple shadow-inner" onclick="setTimeout(_=>configure.querySelector('input').focus(), 400), configure.classList.add('show')"><i class='fa fa-cog'></i> configure</button>
+      
+      <section class="hover:bg-yellow-100 relative">
+        <!--pinata-->
+        <button class="font-fredoka ripple px-2" style="overflow:visible"><!--the button causes a focusin which retains the tooltip's visibility-->
+          <p class="right-full font-sans absolute">store queries or results</p>
+          <span class="stranslate-y-4 transform absolute sm:relative inline-block no-hover no-focus tooltip sm:show text-lg pointer-events-none">Pinata</span><img src="pinata.svg" class="pointer-events-none inline-block w-11 sm:w-12 md:w-16">
+        </button>
+        <form id=pinata onsubmit="let payload, split='<_8c23#_>', sql=page.asText(queries).replace(/\n+/g, ' ').trim(), data = ['name', 'gateway', 'jwt', 'cid'].map(name=>this[name].value).join(split), sm=this.smash, load = Abbr.to(sm, ['pES', 'cL']); sm.textContent='...smashing the pinata!', sm.disabled=!0, load.add('show');
+        if(sql) payload = `{ query: \`${sql+=';'.repeat(!/;$/.test(sql))}\`${page.result?', result:'+page.result:''} }`+split+data,
+        fetch('api/pinata', {
+          method: 'POST', headers: { 'Content-Type': 'text/plain' },
+          body: `data=${payload}`
+        }).then(res=>res.json()).then((json, out)=>{
+          load.remove('show'), sm.textContent = 'smash the pinata!', sm.disabled=0,
+          Abbr.to(out = this.querySelector('aside'), 'cL').add('show'), Abbr.to(out, 'lEC').innerText = both.format(JSON.stringify(json))
+        }).catch(console.warn);
+        return false;" class="text-left bg-white border-2 bottom-0 absolute tooltip p-4 bottom-full right-0"><i class="mr-1 fa fa-file"></i> File mode:
+          <div class="ml-3 my-2 inline-flex text-gray-700" onclick="let e=event.target, _i; slice(this.children).forEach((ch, i)=>ch.classList[ch==e?(_i=i, 'add'):'remove']('border-current')), slice(Abbr.to(this, ['nES', 'children'])).map((n, i)=>(n.classList[i==_i?'add':'remove']('show'), slice(n.querySelectorAll('input')))).forEach((arr, i)=>arr.forEach(el=>{ el[(i==_i?'set':'remove')+'Attribute']('required', '') }))">
+            <button type="button" class="ripple relative p-2 rounded-br-lg text-current px-4 border-current border-b-2 border-r-2">upload</button>
+<button type="button" class="relative p-2 border-l-2 rounded-tl-lg text-current px-4 ripple border-t-2">retrieve</button></div>
+    <section class="relative"><fieldset class="show">
+      <i class="fa-file-export fa"></i> Payload
+      <pre class="text-xs mt-1 mb-2 p-1.5 block bg-blue-100 rounded-lg">{ query: [SQL] <i class="fa fa-plus"></i> result: [Query result] }</pre>
+      <label class="border-current px-3 inline-block border-l border-t rounded-tl-lg">Filename: <input name="name" class="border-l border-current p-2.5 outline-none" size="18" required="" value="plain-text.txt"></label>
+      <br><label>Gateway URL:
+  <input name="gateway" class="p-2.5 outline-none border-b border-current rounded-bl-lg border-l" size="30" required=""></label><label class="mt-3 block mb-1">Pinata JWT:
+  <input name="jwt" class="p-2.5 outline-none border-b border-current rounded-br-xl border-r" size="30" required="">
+  </label></fieldset>
+  <fieldset style="z-index:auto" class="tooltip -slide-y no-hover flex items-center bg-white no-focus absolute inset-0"><label>CID provided for an upload prior
+<input name="cid" class="p-2.5 outline-none border-b border-current rounded-bl-lg border-l" size="30">
+</label></fieldset></section>
+<!-- element for showing responses from Pinata, brought here to have a higher z-index that the fieldsets above -->
+<aside style='z-index:auto' class="tooltip no-hover top-16 bottom-24 no-focus no-focus-within absolute inset-0 bg-gray-50">
+  <button type=button onclick="Abbr.to(this, ['pN','cL']).remove('show')"  class="right-0 ripple px-4 p-3 fa fa-times text-lg absolute border border-gray-600"></button>
+  <pre class="text-xs w-full h-full overflow-scroll pt-4 pb-8 word-break p-2 whitespace-pre-wrap pt-4"></pre>
+</aside>
+      <div class='relative float-right p-1.5'>
+        <span class="-left-6 top-1/2 no-hover no-focus tooltip slide absolute transform rotate-45"><hr class="border-white -mb-0.5 bottom-1/2 left-1/2 anim-round absolute border-4 border-yellow-600 rounded-full" style="animation:anim-round .8s ease-out infinite; --_reach: calc(-1*var(--reach)); --reach: 1.2rem;"></span>
+        <button name="smash" class="mt-1.5 p-3 px-4 bg-center shadow ripple relative rounded-lg font-semibold" style="background-image:url(theme.avif)">smash the pinata!</button>
+      </div>
+<i class="mt-1.5 w-full text-center inline-block text-sm">Data upload/retrieval on the IPFS by <span class="font-fredoka">Pinata</span>, <a href="https://app.pinata.cloud/developers/keys" class="bg-yellow-400 p-1.5 inline-block" target="_blank">open an account</a> and/or fill the fields above to use it</i>
+</form>
+      </section>
+
+    </aside>
+    
+    <!-- iframe for receiving responses for the submitted form above -->
+    <iframe frameborder="0" class="invisible pointer-events-none absolute top-0 " id="response" name="response" onload="let res; (res=this.contentWindow.document.body.textContent)&&receive(res)"></iframe>
+
+<script>
+
+w_Ev('onpopstate')(function(event) {
+  console.log('::BACK HISTORY::', event)
+});
+let delayed;
+function flash(node, delay, color, cb, cls) {
+  (cls = node.classList).add(color), setTimeout(_=>{
+    cls.remove(color), cb()
+  }, delay)
+}
+
+function receive(res, len, html='', btn) {
+  res=JSON.parse(res), Abbr.to(sendQuery, {2:'lC'}).data='apply query to database', Abbr.to(sendQuery, ['nES','cL']).replace('show', 'absolute'),/* remove "keepin it hot" fire svg */
+  /*end of restoring state before sending query*/
+  // console.log('::RES::', res),
+  page.misc={user:1, host:1, port:1, database:1};/*perpetual truthies to aid reassignment to values provided in database URL*/
+
+  if(!res.configured) return;
+  else page.setup(configure.querySelector('main'), account.setup.value||res.configured), configure.querySelector('button').click();
+  res.result!=void 0 &&setTimeout(_=>Abbr.to(configure.querySelector('button'), 'fEC').style.setProperty('--dur', '2s'), 1000);
+
+  if(sendQuery.disabled = res.errors&&res.errors.length) {
+    configure.classList.remove('show'), 
+    Abbr.to(bugs, 'cL').add('show'), res.errors.forEach(error=>{
+      html+=`<li><code class='block mb-3.5'>${error[0]}</code>Fix: <i>${error[1]}</i></li>`
+    }), flash(queries, 300, 'bg-red-300', _=>{
+      bugs.querySelector('code').textContent = (len=res.errors.length) +' error'+ 's'.repeat(len!=1), bugs.querySelector('ul').innerHTML=html
+    });
+    return
+  }
+
+  if(res.result) {
+    /*green flash effect on query input area to signal success */
+    flash(queries, 600, 'bg-green-100', _=>{
+      res.result.length&&(Abbr.to(result, 'nES').querySelector('pre').innerText=page.result=both.format(JSON.stringify(res.result)))
+    });
+    res.result.length&&result.classList.add('show');
+    return
+  }
+  /*prefill input elements for the data if they are available and sent by the client*/
+  ['jwt', 'gateway'].forEach(key=>res[key]&&(pinata[key].value = res[key])),
+  ['database', 'version'].forEach((field, i, a, _i)=>(res[field]||=page.misc[field])&&((_i=delayed[i]).textContent  = res[field], _i.classList.remove('skeleton'))),
+  /*only expected to be executed for very first response*/
+  loader1.classList.remove('dots-1'),
+  ['addr', 'port'].forEach((str, val, id)=>(val=res[id='server_'+str]||page.misc[str])&&(window[id].textContent = val))
+}
+
+debug&&w_Ev('onbeforeunload')(_=>"Prevents unintentional reloads of the page when in debug i.e dev mode");
+let DOMLoaded, vars=[], crE = (tag, attrs, values)=>(tag = document.createElement(tag), values&&Object.keys(values).forEach(key=>tag[key]=values[key]), attrs.forEach(attr=>tag.setAttribute(attr.name, attr.value)), tag);
+
+w_Ev_dom(function(style, types) {
+  delayed = qsa('.skeleton'), configure.classList.add('show'),
+  (style=document.documentElement.style).backdropFilter == void 0&&style.setProperty('--bg-opacity-pad', 0.5),
+  animations.addRippleAnimations();
+  if(debug) return;
+  DOMLoaded = !0,
+
+  /*initial request to synchronize config variables with UI*/
+  account.submit(),
+
+  types = crE('datalist', [], {id:'types'}), 
+  ['DECIMAL(<N>, <N>)', 'FLOAT', 'BIGINT', 'INT', 'SMALLINT', 'TINYINT', 'FLOAT(<N>)', 'BIT(<N>)', 'JSON', 'YEAR', 'DATE', 'TIME', 'DATETIME', 'TIMESTAMP', 'CHAR(<N>)', 'BINARY(<N>)', 'VARCHAR(<N>)', 'VARBINARY(<N>)', 'TINYBLOB', 'TINYTEXT', 'BLOB', 'TEXT', 'MEDIUMBLOB', 'MEDIUMTEXT', 'LONGBLOB', 'LONGTEXT', 'ENUM(...)', ' SET(...)']
+    .forEach((type, el)=>{
+      types.appendChild(crE('option', [], {value:type}))
+    }), document.body.appendChild(types)
+})
+
+function inView(value) { 
+  const item = value.getBoundingClientRect(); 
+  return ( 
+      item.top >= 0 && 
+      item.left >= 0 && 
+      item.bottom <= ( 
+          window.innerHeight || 
+          document.documentElement.clientHeight) && 
+      item.right <= ( 
+          window.innerWidth || 
+          document.documentElement.clientWidth) 
+  );
+}
+/* reset cached offsetTop value for every window resize */
+w_Ev_rz(_=>vars[0]=0)
+
+w_Ev_scroll(function(y) {
+  y = this.scrollY,
+  pooled.classList[cLs(y>(/*vars[0]||=*/pooled.offsetTop))]('affix')
+})
+</script>
+
+</body>
+</html>

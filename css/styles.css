@@ -1,0 +1,39 @@
+.ca4513da > div {
+  --index: 1;
+  --x:1;--y:1;
+  transform: scale3d(var(--x), var(--y), 1);
+  transform-origin: bottom;
+  transition: 0.3s calc(var(--index) * 0.2s) ease-out;
+  /*align text present in the bars*/
+  text-align: center;
+  overflow: hidden;
+}
+@media (min-width:640px) {
+  .ca4513da > div {
+    transform-origin: right;
+  }
+  .ca4513da._reverse > div {
+    transform-origin: left !important;
+  }
+}
+.ca4513da._reverse > div {
+  transform-origin: top;
+}
+.ca4513da > div {
+  /* --x:0 !important; */
+  /* --y: 0 !important; */
+}
+/*scale text or element in bars down*/
+.ca4513da>div>*{
+  transform: scale3d(calc(1 / var(--x)), calc(1 / var(--y)), 1);
+  word-break: break-all;
+  line-height: 16px;
+  /*inline makes text-align above work*/
+  display: inline-block;
+}
+@media (min-width:640px) {
+  .ca4513da>div>*{
+    width:  80%;
+    margin-top: 5%;
+  }
+}
