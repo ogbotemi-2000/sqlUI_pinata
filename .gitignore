@@ -1,4 +1,5 @@
-
+#txt
+*.txt
 #config
 sql_ui_config.json
 config.json

@@ -26,7 +26,6 @@ let db = {
 	}
 
 module.exports = function(args, err_cb, parts, config={}) {
-	// mysql://root:2#@Are_1@localhost:3306/fx?connection_limit=10
 
 	(parts = both.dBParts(args.connectionString)).shift(),
 	['user', 'password', 'host', 'port', 'database'].forEach((key, i)=>config[key]=parts[i]),
@@ -54,14 +53,4 @@ module.exports = function(args, err_cb, parts, config={}) {
 
 		}
 	})
-	
-	/** PostgreSQl */
-// 	client.connect((err) => {
-// 		client.query('SELECT $1::text as message', ['Hello world!'], (err, res) => {
-// 			console.log(err ? err.stack : res.rows[0].message) // Hello World!
-// 			client.end()
-// 		})
-//  })
-
-// postgresql://compute-db_owner:0BCucrD9XORv@ep-dry-cake-a5trbhgu.us-east-2.aws.neon.tech:3000/compute-db
 }
