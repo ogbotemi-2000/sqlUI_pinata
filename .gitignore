@@ -1,6 +1,7 @@
 
 #config
-*.json
+sql_ui_config.json
+config.json
 
 # Logs
 logs

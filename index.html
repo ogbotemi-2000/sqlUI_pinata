@@ -287,7 +287,7 @@ asText: function(node, fn, txt='', _txt, cb) {
       <section class="hover:bg-yellow-100 relative">
         <!--pinata-->
         <button class="font-fredoka ripple px-2" style="overflow:visible"><!--the button causes a focusin which retains the tooltip's visibility-->
-          <p class="right-full font-sans absolute">store queries or results</p>
+          <p class="right-full font-sans absolute bottom-0">store queries or results</p>
           <span class="stranslate-y-4 transform absolute sm:relative inline-block no-hover no-focus tooltip sm:show text-lg pointer-events-none">Pinata</span><img src="pinata.svg" class="pointer-events-none inline-block w-11 sm:w-12 md:w-16">
         </button>
         <form id=pinata onsubmit="let payload, split='<_8c23#_>', sql=page.asText(queries).replace(/\n+/g, ' ').trim(), data = ['name', 'gateway', 'jwt', 'cid'].map(name=>this[name].value).join(split), sm=this.smash, load = Abbr.to(sm, ['pES', 'cL']); sm.textContent='...smashing the pinata!', sm.disabled=!0, load.add('show');

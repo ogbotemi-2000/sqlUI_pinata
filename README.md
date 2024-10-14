@@ -61,7 +61,7 @@ The `server.js` file behaves similarly to the server spawned by `vercel dev` how
 
 ### Running locally
 ```sh
-npm run dev
+npm start
 ```
 ### Awareness
 + The server exits with a console warning if `config.json` is not available, the `PORT` you define in `config.json` is used or `3000` is used if it is not defined.

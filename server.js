@@ -1,10 +1,19 @@
+let fs     = require('fs');
+
+/** write ENV variables to process.env if available */
+fs.readFile('.env.development.local', (err, data)=>{
+  if(err) { /*console.error(err); */return; }
+  data.toString().replace(/\#[^\n]+\n/, '').split('\n').filter(e=>e)
+  .forEach(el=>{
+    let { 0:key, 1:value } = el.split('=');
+    process.env[key] = value.replace(/"/g, '');
+    // console.log(process.env[key])
+  })
+});
+
 let http   = require('http'),
-    fs     = require('fs');
-
-if(!fs.existsSync('./config.json')) console.warn("::Create a `config.json` file with the fields required for a neondatabase for proper behaviour"), process.exit();
-
-let path   = require('path'),
-    config = require('./config.json'),
+    path   = require('path'),
+    config = fs.existsSync('./config.json')&&require('./config.json')||{PORT: process.env.PORT||3000},
     mime   = require('mime-types'),
     jobs   = {
       GET:function(req, res, parts, fxn) {
@@ -56,7 +65,7 @@ http.createServer((req, res, url, parts, data, verb)=>{
     // console.error(str='::ERROR:: '+err, [url])
     res.end(str)
   })
-}).listen(config.PORT||=3000, _=>{
+}).listen(config.PORT, _=>{
   console.log(`Server listening on PORT ${config.PORT}`)
 })
 
@@ -69,13 +78,3 @@ function urlParts(url, params, query, is_html) {
         params, query: decodeURIComponent(query), url, is_html
     }
 }
-/** write ENV variables to process.env if available */
-fs.readFile('.env.development.local', (err, data)=>{
-  if(err) { /*console.error(err); */return; }
-  data.toString().replace(/\#[^\n]+\n/, '').split('\n').filter(e=>e)
-  .forEach(el=>{
-    let { 0:key, 1:value } = el.split('=');
-    process.env[key] = value.replace(/"/g, '');
-    // console.log(process.env[key])
-  })
-})

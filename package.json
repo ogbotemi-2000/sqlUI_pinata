@@ -1,0 +1,24 @@
+{
+  "name": "sqlUI_pinata",
+  "version": "1.0.0",
+  "description": "A SQL RDBMS UI client for complete, crash-proof database interaction",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "nodemon server.js",
+    "start": "node server"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@neondatabase/serverless": "^0.9.4",
+    "mime-types": "^2.1.35",
+    "mysql2": "^3.11.3",
+    "pinata": "^1.5.0",
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.4"
+  }
+}
