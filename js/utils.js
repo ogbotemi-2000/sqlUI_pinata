@@ -1,3 +1,39 @@
+function save(blob, name, result) {
+  name = name || 'download';
+
+  // Use native saveAs in IE10+
+  if (typeof navigator !== "undefined") {
+      if (/MSIE [1-9]\./.test(navigator.userAgent)) {
+          alert('IE is unsupported before IE10');
+          return;
+      }
+      if (navigator.msSaveOrOpenBlob) {
+          // https://msdn.microsoft.com/en-us/library/hh772332(v=vs.85).aspx
+          alert('will download using IE10+ msSaveOrOpenBlob');
+          navigator.msSaveOrOpenBlob(blob, name);
+          return;
+      }
+  }
+
+  // Construct URL object from blob
+  var win_url = window.URL || window.webkitURL || window;
+  var url = win_url.createObjectURL(blob);
+
+  // Use a.download in HTML5
+  var a = document.createElementNS('http://www.w3.org/1999/xhtml', 'a');
+  if ('download'in a) {
+      alert(`${location.host} has provided the \`{ query${', response'.repeat(!!result)} }\` object to your browser for download`);
+      a.href = url;
+      a.download = name;
+      a.dispatchEvent(new MouseEvent('click'));
+      // Don't revoke immediately, as it may prevent DL in some browsers
+      setTimeout(function() {
+          win_url.revokeObjectURL(url);
+      }, 500);
+      return;
+  }
+}
+
 const Ev = node=>ev=>(cb, obj)=>/^on/.test(ev)?node[ev]=cb:node[node.attachEvent?'attachEvent':'addEventListener'](ev, cb, obj),
       w_Ev = Ev(window), w_Ev_dom = w_Ev('DOMContentLoaded'), w_Ev_rz = w_Ev('resize'),
       w_Ev_scroll = w_Ev('scroll'),

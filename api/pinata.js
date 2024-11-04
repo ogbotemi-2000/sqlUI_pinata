@@ -15,7 +15,7 @@ function upload(file, name, buffer, date) {
 }
 
 module.exports = async function(request, response) {
-  let { data } = request.body||request.query;
+  let { data, local } = request.body||request.query;
 
   /** hardcoded string for splittig both on the client and server */
   data=data.slice(data.indexOf('=')+1).split('<_8c23#_>'),
@@ -27,7 +27,7 @@ module.exports = async function(request, response) {
   config&&(config.PINATA_GATEWAY = data[2], config.PINATA_JWT = data[3]), 
   config||={ PINATA_GATEWAY: data[2], PINATA_JWT: data[3] },
 
-  fs.writeFile(filePath, both.format(JSON.stringify(config)), _=>_)
+  local&&fs.writeFile(filePath, both.format(JSON.stringify(config)), _=>_)
 
   // pinata.testAuthentication().then()
 
