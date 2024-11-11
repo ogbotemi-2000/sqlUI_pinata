@@ -12,8 +12,9 @@ fs.readFile('.env.development.local', (err, data)=>{
 
 let http   = require('http'),
     path   = require('path'),
-    config = fs.existsSync('./config.json')&&require('./config.json')||{PORT: process.env.PORT||3000},
+    config = fs.existsSync('./config.json')&&require('./config.json')||{PORT: process.env.PORT||8000},
     mime   = require('mime-types'),
+    { urlParts, parseMultipart }    = require('./utils'),
     jobs   = {
       GET:function(req, res, parts, fxn) {
         /** middlewares that respond to GET requests are called here */
@@ -21,17 +22,21 @@ let http   = require('http'),
         if(parts.query) req.query = parts.params, fxn&&fxn(req, res);
         return !!fxn;
       },
-      POST:function(req, res, parts, fxn) {
-        fxn = fs.existsSync(fxn='.'+parts.url+'.js')&&require(fxn),
-        req.on('data', function(data) {
-          /** obtain the request body only for enctype=application/x-www-form-urlencoded  */
-          /** create req.body and res.json because invoked modules in Vercel require them to be defined */
-          /\{|\}/.test(data=data.toString()) && console.log('::DATA::', [data=data.toString()], urlParts('?'+data)),
-          /** only try to split the body of requests that are not JSON i.e formurlencoded such as `name=name&id=1` */
-          req.body = /\{|\}/.test(data=data.toString()) ? { data }
-          : (parts = urlParts('?'+data)).params,
+      POST:function(req, res, parts, fxn, buffer) {
+        fxn = fs.existsSync(fxn='.'+parts.url+'.js')&&require(fxn), buffer=[],
+        req.on('data', chunk=>buffer.push(chunk)),
+
+        req.on('end', function(data) {
+            data = Buffer.concat(buffer).toString('utf-8'),
+            /** create req.body and res.json because invoked modules in Vercel require them to be defined */
+            req.body = /multipart/.test(req.headers['content-type'])  ? parseMultipart(req, data)
+            : (/** urlParts obtains the parameters for other enctypes as used below */
+            /\{|\}/.test(data) ? { data }
+            : (parts = urlParts('?'+data)).params),
+
           fxn&&fxn(req, res)
         });
+        /* no issue of returning earlyo before the callback above since fxn gets its value early on*/
         if(!fxn) res.end();
         /** decided to return true instead of !!fxn since POST requests are not expected to GET html resources */
         return !!fxn;
@@ -46,7 +51,7 @@ http.createServer((req, res, url, parts, data, verb)=>{
   data = jobs[verb=req.method](req, res, parts),
 
   url = url === '/' ? 'index.html' : url,
-  /** comment data || out if your middlewares are built to return values to be sent as responses and not send back responses by themselves */
+  /** comment "data ||" out if your middlewares are built to return values to be sent as responses and not send back responses by themselves */
   data || new Promise((resolve, rej, cached)=>{
     if (data) { resolve(/*dynamic data, exit*/); return; }
 
@@ -70,13 +75,3 @@ http.createServer((req, res, url, parts, data, verb)=>{
 }).listen(config.PORT, _=>{
   console.log(`Server listening on PORT ${config.PORT}`)
 })
-
-function urlParts(url, params, query, is_html) {
-    params = {}, query='',
-    url.replace(/\?[^]*/, e=>((query=e.replace('?', '')).split('&').forEach(e=>params[(e=e.split('='))[0]]=decodeURIComponent(e[1])), '')),
-    query &&= '?'+query,
-    is_html = !/\.[^]+$/.test(is_html = (url = url.replace(query, '')).split('/').pop())||/\.html$/.test(is_html);
-    return {
-        params, query: decodeURIComponent(query), url, is_html
-    }
-}

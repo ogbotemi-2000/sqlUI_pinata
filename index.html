@@ -1,17 +1,23 @@
 <!DOCTYPE HTML><html lang="en"><head>
-        <title>Neontech starter kit UI | Browser client for starter kit</title>
+        <title>Web App for SQL Database Interaction _ Supports RAG with Timescale and PGVector _ Interact with Ollama via widget _ Upload query-response to Pinata _ MySQL UI</title>
         <meta charset="utf-8">
+        <meta name="keywords" content="Retrieval Augumented Generation pgvector Timscale Connection Pooling UI Ollama REST API Interaction Local SQL RDBMS Client">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <link rel="stylesheet" href="css/tailwind.min.css">
         <link rel="stylesheet" href="css/all.min.css">
         <link rel="stylesheet" href="css/page.css">
+        <link rel="stylesheet" href="css/github.css">
+
         <script src="js/ripples.js"></script>
         <script src="js/utils.js"></script>
         <script src="js/both.js"></script>
+        <script src="js/highlight.min.js"></script>
         <script>
 let debug=/debug/.test(location.search), slice=arr=>[].slice.call(arr), qsa=str=>slice(document.querySelectorAll(str)),
     uuid   = (a) => (a ? (a ^ ((Math.random() * 16) >> (a / 4))).toString(16) : ([1e7] + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, uuid)),
 page = {
+  metadata:'', embedding:'',
+  misc : {user:1, host:1, port:1, database:1},/*perpetual truthies to aid reassignment to values provided in database URL*/
   isLocal: /localhost/.test(window.location.hostname),
   setup: function(node, str) {
     let ind=0, parts = both.dBParts(str), misc= {1:'user', 3:'host', 4:'port', 5:'database'};
@@ -49,18 +55,23 @@ page = {
 );`,
 `<span class="font-semibold text-pink-500 mb-2 inline-block">ALTER TABLE</span> table_name
 <span class="font-semibold text-pink-500">DROP CONSTRAINT</span> table_cell_id;`],
-asText: function(node, fn, txt='', _txt, cb) {
+asText: function(node, fn, txt='', _txt, cb, val) {
     (cb=(nodes, flag, bool)=>slice(nodes).forEach((ch, res)=>{
       res = ch.data || ch.value || '',
       txt += bool = fn&&fn.call ? fn(ch) : res,
       !bool&&ch.childNodes.length&&cb(ch.childNodes, !0)
-    }))(node.childNodes);
-    return txt
+    }))(node.childNodes),
+    _txt = node.innerText,
+    val = _txt.length>txt.length ? txt : txt;
+    return txt;
   }
 };
 </script>
 
 <style>
+#queries * {
+  background-color: transparent;
+}
 html {
   --bg-opacity-pad: 0;
 }
@@ -141,7 +152,7 @@ html {
                 --tw-scale-y: 8;
                 transform: scale3d(var(--tw-scale-x),var(--tw-scale-y),1);
                 --tw-bg-opacity: 0.15;
-            }
+              }
 
             * > .decorate.out > div, .decorate-parent > .decorate.out > div {
                 --tw-scale-x: 8;
@@ -155,25 +166,7 @@ html {
         </style>
     </head>
     <body>
-      <nav class="fixed right-2 sm:right-5 m-3 text-center z-3">
-        <a href="https://www.buymeacoffee.com/oogbotemiT" target="_blank" class="align-middle sm:inline-block block"><figure class="rounded-full hover:bg-gray-300 sm:px-4 p-1 sm:p-2 text-left relative"><img src="buymeacoffee.svg" class="w-9 mb-1 m-auto">
-<figcaption class="rounded-xl bg-yellow-300 p-3 -mt-5 absolute right-full text-sm tooltip">
-    <header class="font-semibold">Buy me a coffee</header><p class="w-52">An online service that enables monetary support from the users of a product to its owner.
-<br><i class="inline-block border-t border-current text-gray-800 mt-3">This link opens a new page where you can input the amount you wish to donate in dollars</i></p>
-</figcaption></figure></a>
-<a class="align-middle inline-block mt-1" href="#" target="_blank"><i class="fab fa-github text-4xl"></i></a><br>
-<span class="top-1/4 sm:right-1/3 absolute right-4 text-2xl">↗</span>
-<article class="inline-block duration-300 ease-out sm:mt-0 mt-2 relative text-xs sm:text-sm">
-<main class="sm:w-96 border-2 rounded-xl pt-7 p-4 text-left bg-white w-80 absolute right-0 top-0 tooltip" style="z-index:auto">
-    <h3 class="font-semibold mb-2">Editor</h3>
-<ul class="space-y-4 list-disc ml-4">
-<li>A semi-colon is automatically added to the query if absent before it is executed on the database</li>
-<li><kbd class="float-left mr-2 inline-block bg-gray-50 p-1 border rounded-lg border-gray-400">Ctrl + ←<span class="align-middle inline-block">↑<br>↓</span>→</kbd> quickens the cursor movements by making it jump over words.</li><li><kbd class="mr-1 p-1 bg-gray-50 border rounded-lg border-gray-400 inline-block">Shift + </kbd><i> the key combination above</i> highlights words at once.</li>
-<li>The formatted texts or input areas can be easily duplicated by copy-pasting them in the editor</li><li>Using only arrow keys to move the cursor may make it jump over multiple lines at once. However, using only <kbd class="mr-1 inline-block bg-gray-50 p-1 border rounded-lg border-gray-400">Ctrl + ← →</kbd> eases this frustration.</li>
-<li><kbd class="mr-1 inline-block bg-gray-50 p-1 border rounded-lg border-gray-400">page.result = ''</kbd> clears the result of the recent SQL query executed on the database</li></ul>
-</main><button class="rounded-bl-xl rounded-tr-xl p-2 bg-gray-200 ripple relative inline-block"><i class="px-3 text-xs border border-current rounded-full inline-block p-2 fa fa-exclamation"></i> Hints</button></article>
-</nav>
-<aside id="configure" style="--tw-bg-opacity:calc(var(--bg-opacity-pad) + 0.15); z-index: 4;" class="tooltip no-hover no-focus no-focus-within -slide-y bg-gray-100 flex items-center justify-center text-center inset-0 backdrop-blur-sm backdrop-filter fixed">
+      <aside id="configure" style="--tw-bg-opacity:calc(var(--bg-opacity-pad) + 0.15); z-index: 4;" class="tooltip no-hover no-focus no-focus-within -slide-y bg-gray-100 flex items-center justify-center text-center inset-0 backdrop-blur-sm backdrop-filter fixed">
         <section class="relative p-6 rounded-lg shadow bg-white inline-block text-sm font-bold text-sm text-left mx-6 text-gray-800">Database Connection String
           <!-- do not add nodes before the element below here except textNodes in order to ensure proper behaviour -->
           <main class="[&>*]:inline-block" oninput="let type=event.inputType, tx=str=Abbr.to(event.target, ['tC', 'value'], !0); type==='insertFromPaste'&&page.setup(this, tx)">
@@ -188,21 +181,117 @@ html {
               r&&=nx&&nx.data&&r+nx.data;
               return r||''
           }).trim().replace(/\?$/, ''); flag=account.setup.value!=text, text&&(account.query.value='', account.setup.value=text, flag&&(bugs.classList.remove('show'), account.submit()), this.disabled=true, Abbr.to(this, ['fEC', 'cL']).add('out-in-out'))">
-                <div onanimationend="Abbr.to(this, 'pN').disabled=false, Abbr.to(this, [{4:'pN'}, 'cL']).remove('show'), Abbr.to(this, 'cL').remove('out-in-out')" class="absolute inset-0 bg-yellow-500 transform-gpu -translate-x-full" style="--dur:12s;"></div>
+                <div onanimationend="Abbr.to(this, 'pN').disabled=false, Abbr.to(this, [{4:'pN'}, 'cL']).remove('show'), Abbr.to(this, 'cL').remove('out-in-out'), this.style.setProperty('--dur', '50s')" class="absolute inset-0 bg-yellow-500 transform-gpu -translate-x-full" style="--dur:50s;"></div>
                 <span class="relative">configure app</span>
               </button></div>
               <button onclick="Abbr.to(this, [{2:'pN'}, 'cL']).remove('show')" class="ripple border-t border-r border-gray-700 bottom-0 left-0 absolute p-4 px-6 rounded-tr-lg rounded-bl-lg">close</button>
               </section>
-      </aside>
+            </aside>
+
+      <nav class="top-0 fixed right-0 sm:mr-5 mx-3 z-3">
+        
+          <article class="mb-3 z-3 inline-block duration-300 ease-out relative text-xs lg:text-sm">
+<main class="sm:w-96 border-2 rounded-xl pt-7 p-4 text-left bg-white w-80 absolute right-0 top-0 tooltip" style="z-index:auto">
+    <h3 class="font-semibold mb-2">Editor</h3>
+<ul class="space-y-4 list-disc ml-4">
+<li>A semi-colon is automatically added to the query if absent before it is executed on the database</li>
+<li><kbd class="float-left mr-2 inline-block bg-gray-50 p-1 border rounded-lg border-gray-400">Ctrl + ←<span class="align-middle inline-block">↑<br>↓</span>→</kbd> quickens the cursor movements by making it jump over words.</li><li><kbd class="mr-1 p-1 bg-gray-50 border rounded-lg border-gray-400 inline-block">Shift + </kbd><i> the key combination above</i> highlights words at once.</li>
+<li>The formatted texts or input areas can be easily duplicated by copy-pasting them in the editor</li><li>Using only arrow keys to move the cursor may make it jump over multiple lines at once. However, using only <kbd class="mr-1 inline-block bg-gray-50 p-1 border rounded-lg border-gray-400">Ctrl + ← →</kbd> eases this frustration.</li>
+<li><kbd class="mr-1 inline-block bg-gray-50 p-1 border rounded-lg border-gray-400">page.result, page.embedding, page.metadata</kbd> are available for viewing or modification via the Console</li></ul>
+</main><button class="border-gray-300 border-2 rounded-b-xl p-2 bg-gray-200 ripple relative inline-block"><i class="px-3 text-xs border border-current rounded-full inline-block p-2 fa fa-exclamation"></i> Hints</button></article><br>
+
+<button class="align-middle ripple relative sm:hidden ripple relative p-3 bg-yellow-300 rounded-full text-3xl px-3.5" onclick="[Abbr.to(this, 'nES'), Abbr.to(this, {2:'nES'})].forEach(el=>['relative', 'show', 'absolute'].forEach(cls=>Abbr.to(el,'cL').toggle(cls)))"><i class="fa fa-th"></i></button><article class="slide-y sm:relative sm:show no-hover no-focus-within no-focus tooltip align-middle inline-block duration-300 ease-out text-xs sm:text-sm sm:pt-2 sm:pr-2 sm:mr-2 absolute" style="z-index:2">
+<main class="sm:w-96 border-2 rounded-xl pt-7 p-4 text-left bg-white w-80 absolute top-0 tooltip pb-0 right-0" style="z-index:auto; pointer-events:auto">
+    <h3 class="font-semibold mb-2">Interact with Ollama</h3>
+<ul class="relative list-disc pl-4">
+<li class="[&>*]:inline-block [&>*]:align-top"><p>Connection</p><br>Host:<div class="w-5/6 ml-2 outline-none p-2 bg-transparent border-b border-current inline-block align-bottom" value="http://127.0.0.1:11434" style="vertical-align:bottom" contenteditable="true" data-placeholder="URL to Ollama API">http://127.0.0.1:11434</div>
+<br><span class="mt-2 mr-3">Request body <kbd class="ml-2 bg-gray-100 text-xs p-2 rounded-xl inline-block border border-gray-300"><i class="fa fa-pen mr-1"></i>editable</kbd></span><kbd style="vertical-align:bottom">{</kbd><code class="p-1 pl-2 pb-2 text-xs pr-4 w-full whitespace-pre-wrap [&>*]:inline-block" contenteditable="" spellcheck="false"><span class="text-red-600">"model":</span><span class="text-green-900">"lllama2"</span>,<br><span class="text-red-600">"prompt":</span><span class="text-green-900">"plain text or formatted"
+</span>
+</code><div class="ml-2 w-full"><span class="text-red-600">"streaming":</span>
+<span class="text-green-900">"false"</span></div>
+}<br><button class="mt-1.5 ripple relative p-3 rounded bg-near-black text-white" onclick="let qs=str=>Abbr.to(this,'pN').querySelector(str), 
+url=qs('[contenteditable]').textContent, req=page.asText(qs('code')), aside = Abbr.to(this, ['pN', 'nES']), flag=/embedding/.test(url), data = JSON.parse(`{${req}}`), result, embed='[0.000108064, 0.005860855, -0.012656143]', meta;
+    
+data.streaming = false, meta=JSON.stringify(data),
+  fetch(url, {
+    method: 'POST',
+    body: meta
+  }).then(res=>res.json()).then(res=>{
+      result = res, flag&&(/*store embedding to be used sent to the server later*/account.embedding.value = embed = res.embedding)
+  }).catch(err=>{result=err, flag=0})
+  .finally(_=>{
+    window.metadata.textContent = both.format((page.metadata = meta).slice(0, 100)+('...'.repeat(meta.length>100))),
+    window.embedding.textContent = (page.embedding = embed).slice(0, 100)+('...'.repeat(embed.length>100)),
+    aside.querySelector('pre').innerHTML = both.format(JSON.stringify(flag===0?/*error*/{error:result.message}:result)),
+    ['translate-y-1/4', 'pointer-events-none', 'opacity-0'].forEach(cls=>Abbr.to(aside, 'cL').toggle(cls))
+  })
+">pet the Llamma</button></li><aside class="duration-300 ease-out bg-white absolute inset-0 transform translate-y-1/4 pointer-events-none opacity-0">
+  <button type="button" onclick="['translate-y-1/4', 'pointer-events-none', 'opacity-0'].forEach(cls=>Abbr.to(this, ['pN', 'cL']).toggle(cls))" class="right-0 ripple px-4 p-3 fa fa-times text-lg absolute border border-gray-600 rounded-full mt-4"></button>
+  <pre class="text-xs w-full h-full overflow-scroll pt-4 pb-8 word-break p-2 whitespace-pre-wrap pt-4">{
+	"error":"Failed to fetch"
+}</pre>
+</aside>
+</ul><div class="text-right"><button class="ripple relative bg-gray-200 rounded-full p-2 px-4" onclick="let bool, ch=this.childNodes; ch[0].data = 'un'.repeat(bool=ch[1].classList.toggle('fa-lock-open')) + 'pin widget', Abbr.to(this, [{2:'pN'}, 'cL'])[bool?'add':'remove']('show')">pin widget<i class="ml-2 text-lg fa fa-lock"></i></button></div>
+
+<p class="mt-2 bg-gray-100 text-xs px-5 -mx-4 p-2.5">Responses or errors appear after you've "pet the Llama"</p>
+</main><button class="rounded-full px-3 bg-white ripple relative inline-block" id="openOllama"><img class="m-auto w-9" src="ollama.png"></button></article><article class="align-middle slide-y sm:relative sm:show no-hover no-focus-within no-focus tooltip sm:mt-0 md:inline-block duration-300 ease-out text-xs sm:text-sm pt-3 pr-3 absolute" style="z-index:1">
+<main class="sm:w-96 border-2 rounded-xl p-4 text-left bg-white w-80 absolute top-0 tooltip right-0" style="z-index:auto; pointer-events:auto;">
+    <h3 class="w-1/2 font-semibold mb-2">Retrieval Augumented Generation</h3><p class="mt-3 text-center -mx-5 text-sm p-2 bg-blue-100">Requires a database that support vector embeddings such as <a class="text-base p-1 underline inline-block" target="_blank" href="https://console.cloud.timescale.com/">Timescale ↗</a></p>
+<section class="[&>*]:p-2 mb-2 -mx-4 [&>*]:relative" onclick="if(event.target==this) return; let cls='bg-blue-200', t=event.target, i=[].slice.call(this.children).indexOf(t), cNs=[].slice.call(Abbr.to(this, ['nES', 'children'])); [this.querySelector('.'+cls), event.target].forEach(n=>n.classList.toggle(cls)), cNs[i]&&[cNs[i], Abbr.to(this, 'nES').querySelector('.opacity-100')||cNs[i]].forEach((e,_i)=>e.classList[_i?'remove':'add']('opacity-100', 'pointer-events-auto'))"><button class="ripple w-1/3 hover:bg-blue-100 bg-blue-200">Schema</button><button class="ripple w-1/3 hover:bg-blue-100">Embedding</button><button class="ripple w-1/3 hover:bg-blue-100">Seed database</button></section>
+
+<ul class="my-2 relative list-disc pl-4">
+<li class="pointer-events-none opacity-0 duration-300 ease-out opacity-100 pointer-events-auto"><h4 class="font-semibold text-gray-700">Create Schema</h4>
+<i class="my-1 block">Click on each query below to edit them before applying them to the database</i>
+<button class="text-left font-mono ripple relative inline-block border border-gray-300 rounded-xl p-3 text-xs" onclick="queries.removeAttribute('data-highlighted'), queries.innerHTML = hljs.highlightAuto(this.textContent).value">
+<pre class="whitespace-normal"><code class="language-sql hljs" data-highlighted="yes">
+<span class="hljs-keyword">CREATE</span> EXTENSION IF <span class="hljs-keyword">NOT</span> <span class="hljs-keyword">EXISTS</span> vector; 
+</code></pre>
+</button><button class="text-left font-mono ripple relative mt-1 inline-block border border-gray-300 rounded-xl p-3 text-xs" onclick="queries.removeAttribute('data-highlighted'), queries.innerHTML = hljs.highlightAuto(this.textContent).value"><pre class="whitespace-normal"><code class="language-sql hljs" data-highlighted="yes">
+<span class="hljs-keyword">CREATE</span> <span class="hljs-keyword">TABLE</span> IF <span class="hljs-keyword">NOT</span> <span class="hljs-keyword">EXISTS</span> data (id SERIAL <span class="hljs-keyword">PRIMARY</span> KEY, metadata text, embedding vector(<span class="hljs-number">1536</span>));
+</code></pre></button></li>
+<li class="right-0 left-4 top-0 absolute opacity-0 duration-300 ease-out pointer-events-none"><h4 class="mb-2 font-semibold text-gray-700">Embedding from Ollama</h4>
+The requested embedding is automatically stored and used in this application if successful.<i class="mt-3.5 block">Click on the button below to open the Ollama widget</i><button class="mt-2 text-left font-mono ripple relative mt-1 inline-block border border-gray-300 rounded-2xl p-3" onclick="let el=Abbr.to(openOllama, 'pN').querySelector('[contenteditable]'), url=el.textContent;
+el.textContent = url.replace(/(\/api[^]+|\/*)$/, '/api/embeddings'), openOllama.focus()">
+<img class="mr-3 inline-block w-7" src="ollama.png"> api/embeddings</button>
+</li><li class="right-0 left-4 top-0 absolute opacity-0 duration-300 ease-out pointer-events-none"><h4 class="font-semibold text-gray-700">Add seed data to database</h4>
+<i class="mb-2 my-1 block">Click on each to expand/edit in editor</i>
+<button class="justify-between items-center w-full flex font-mono ripple relative hover:bg-gray-100 border border-gray-300 rounded-xl p-1 text-xs" onclick="queries.innerHTML = hljs.highlightAuto('SELECT metadata, embedding <-> $1 AS distance FROM data ORDER BY distance LIMIT 3').value" style="overflow: visible;">
+<code class="mr-2 font-semibold rounded-inherit border border-gray-300 inline-block text-pink-500 p-3">SELECT</code>... <-> $1 ... 
+<code class="ml-2 font-semibold rounded-inherit border border-gray-300 inline-block p-3 relative">[embedding]<aside class="font-normal border-gray-300 border-2 text-left p-3 bg-white tooltip to-left absolute " style="--arrow-size: 6px;"><strong>Embedding</strong><pre id="embedding" class="whitespace-pre-wrap" style="max-height: 200px; max-width: 200px;"></pre>
+
+</aside></code></button><button class="mt-2 justify-between items-center w-full flex font-mono ripple relative hover:bg-gray-100 border border-gray-300 rounded-xl p-1 text-xs" onclick="queries.innerHTML = hljs.highlightAuto('INSERT INTO data (metadata, embedding) VALUES ($1, $2)').value" style="overflow: visible;">
+<code class="mr-2 font-semibold rounded-inherit border border-gray-300 inline-block text-pink-500 p-3">INSERT</code>..($1, $2) 
+<code class="relative flex-1 ml-2 font-semibold rounded-inherit border border-gray-300 inline-block p-3">[metadata, embedding]<aside class="border-gray-300 border-2 font-normal text-left p-3 bg-white tooltip to-left absolute " style="--arrow-size: 6px;"><strong>Metadata</strong><pre class="whitespace-pre-wrap word-break" id="metadata" style="max-height: 200px; max-width: 200px;"></pre>
+</aside></code></button></li></ul>
+<button class="ripple relative bg-gray-200 rounded-full p-2 float-right px-4" onclick="let bool, ch=this.childNodes; ch[0].data = 'un'.repeat(bool=ch[1].classList.toggle('fa-lock-open')) + 'pin widget', Abbr.to(this, ['pN', 'cL'])[bool?'add':'remove']('show')">pin widget<i class="ml-2 text-lg fa fa-lock"></i></button>
+
+</main><button class="bg-near-black rounded-full p-1 bg-white ripple relative inline-block [&>*]:inline-block text-white"><img src="timescale.svg">
+<span class="mr-2 ml-0.5 font-fredoka">• RAG</span></button></article><!-- <figure class="align-middle sm:inline-block relative">
+            <a href="https://www.buymeacoffee.com/oogbotemiT" target="_blank" class="rounded-full hover:bg-gray-300 inline-block px-3 p-1">
+            <img src="buymeacoffee.svg" class="w-9 mb-1 m-auto">
+            </a>
+<figcaption class="top-0 rounded-xl bg-yellow-300 p-3 absolute right-full text-sm tooltip">
+    <header class="font-semibold">Buy me a coffee</header><p class="w-52">An online service that enables monetary support from the users of a product to its owner.
+<br><i class="inline-block border-t border-current text-gray-800 mt-3">This link opens a new page where you can input the amount you wish to donate in dollars</i></p>
+</figcaption>
+<aside class="sm:ml-1.5 sm:bottom-1/4 sm:left-2/3 absolute text-2xl -bottom-3 left-1/3 ml-1">↗</aside></figure> -->
+<a class="mt-3 align-bottom block lg:inline-block" href="#" target="_blank"><i class="fab fa-github text-5xl"></i></a>
+
+
+
+
+
+</nav>
 
       <section class="mb-24 sm:mb-32 w-full mt-1 p-10 md:w-4/5 m-auto border-r sm:border-gray-300 border-l relative">
         <i class="fa fa-database text-xl text-gray-600 mr-3"></i><code class="skeleton p-1 rounded-full font-semibold">database</code>
-        <p class="my-2 py-3 skeleton italic rounded-full"></p>
-        <form id="account" target="response" method="post" action="api/accountData" onsubmit="/*event.preventDefault(), */console.log('::SUBMIT::', event), bugs.classList.remove('show')" class="align-middle inline-block mr-56 mb-6">
-          <input type="text" name="query" class="hidden">
+        <p class="my-2 py-3 skeleton italic w-5/6 rounded-full"></p>
+        <form enctype="multipart/form-data" id="account" target="response" method="post" action="api/accountData" onsubmit="/*event.preventDefault(), */console.log('::SUBMIT::', event), bugs.classList.remove('show')" class="align-middle inline-block mr-56 mb-6">
+          <textarea name="query" class="hidden"></textarea>
           <input type="text" name="local" class="hidden">
           <input type="text" name="setup" class="hidden">
-          <input type="text" name="pinata" class="hidden">
+          <input type="text" name="embedding" class="hidden">
+          <input type="text" name="metadata" class="hidden">
           <!--the input elements above is not rendered but instead used as an ever present part of the request body -->
           <label id="pooled" class="duration-500 top-0 ease-out align-middle toggle-wrapper switch z-1" style="--slider-checked-color:gray; --switch-size:15px;" role="button">
             <input type="checkbox" name="pooled" oninput="sendQuery.disabled=0/*for when pooling causes errors */">
@@ -239,16 +328,18 @@ html {
           delete<i class="ml-2 fa fa-trash-alt"></i></button>
       </div>
 
-      <main class="mb-0 sm:mx-0 -mx-9 relative shadow border rounded-3xl border-gray-300">
-<pre id="queries" contenteditable="" oninput="account.setup.value&&(sendQuery.disabled=0)" spellcheck="false" class="duration-700 ease-out rounded-t-3xl p-8 border-b-2 border-gray-300 w-full inline-block"><span class="font-semibold text-pink-500 inline-block mb-1">SELECT</span>
+      <main class="mb-0 sm:mx-0 -mx-9 relative shadow border rounded-3xl border-gray-300"><button class="ripple rounded-full p-4 border border-gray-400 text-2xl fa fa-highlighter m-3 bottom-24 absolute right-0" onclick="queries.innerHTML = hljs.highlightAuto(queries.textContent).value"></button>
+
+<pre><code id="queries" contenteditable="" oninput="account.setup.value&&(sendQuery.disabled=0)" spellcheck="false" style="max-height:50vh;" class="overflow-scroll whitespace-pre-wrap duration-700 ease-out rounded-t-3xl p-8 border-b-2 border-gray-300 w-full inline-block language-sql hljs" data-highlighted="yes"><span class="font-semibold text-pink-500 inline-block mb-1">SELECT</span>
   table_cell_id, 
   <span class="inline-block my-1 font-semibold text-pink-500">first_field</span>
 <span class="font-semibold text-pink-500 inline-block my-1">FROM</span>
   table_name
 <span class="font-semibold text-pink-500 inline-block my-1">WHERE</span>
-  table_cell_id = <span class="font-semibold text-blue-400 inline-block">1</span>;
+  table_cell_id = <span class="font-semibold text-blue-400 inline-block">1</span>;</code>
 </pre>
-  <button id="sendQuery" disabled="" class="z-1 align-middle relative text-sm ml-4 my-2" onclick="let txt=Abbr.to(this, {2:'lC'}), query=page.asText(queries).replace(/\n+/g, ' ').trim(); query+=';'.repeat(!/;$/.test(query)), query&&(page.templates[page.i] = queries.innerHTML, this.disabled=txt.data='awaiting query results....', Abbr.to(this, ['nES','cL']).replace('absolute', 'show'), bugs.classList.remove('show'), result.classList.remove('show'), account.query.value=query, account.submit())">
+
+  <button id="sendQuery" class="z-1 align-middle relative text-sm ml-4 my-2" onclick="let txt=Abbr.to(this, {2:'lC'}), query=page.asText(queries).trim(); query+=';'.repeat(!/;$/.test(query)), query&&(page.templates[page.i] = queries.innerHTML, this.disabled=txt.data='awaiting query results....', Abbr.to(this, ['nES','cL']).replace('absolute', 'show'), bugs.classList.remove('show'), result.classList.remove('show'), ['embedding', 'metadata'].forEach(p=>account[p].value=page[p]), account.query.value=query, account.submit())">
     <div class="mt-0.5 -ml-px absolute h-1/2 w-1/5 rounded-tl-full border-t border-l border-current top-0 left-0"></div>
     <div class="mt-2 rounded-3xl overflow-hidden absolute inset-0 text-green-400 m-1 mb-2"><div style="transform-origin: bottom; animation-duration: 3s; transform-origin: top right" class="w-1/3 top-1/2 origin-center bg-gradient-to-r from-transparent via-current to-tansparent absolute animate-spin p-10"></div></div>
 <div class="absolute h-1/2 w-1/4 rounded-br-full bottom-0 right-0 border-b border-r border-current mb-0.5 -mr-0.5"></div>
@@ -293,8 +384,8 @@ html {
 
     <aside class="z-3 flex items-end justify-between fixed right-0 left-0 bottom-0 p-5 sm:justify-around text-center text-sm">
       <div class="relative">
-        <p class="bg-gray-100 shadow-inner z-1 relative p-3 text-sm rounded-lg rounded-l-2xl border"><i class="fa fa-code text-gray-500 text-xl sm:text-base"></i><span class="ml-2 tooltip no-hover no-focus no-focus-within slide sm:show sm:relative absolute">attributions</span></p>
-        <div style="z-index: auto;" class="pb-12 text-sm p-4 bg-gray-200 left-0 bottom-0 shadow tooltip absolute rounded-lg w-40">
+        <button class="bg-gray-100 shadow-inner z-1 relative p-3 text-sm rounded-lg rounded-l-2xl border"><i class="fa fa-code text-gray-500 text-xl sm:text-base"></i><span class="ml-2 tooltip no-hover no-focus no-focus-within slide sm:show sm:relative absolute">attributions</span></button>
+        <div style="z-index: auto;" class="pb-12 text-sm p-4 bg-gray-200 left-0 bottom-1 shadow tooltip absolute rounded-lg w-40">
           <a target="_blank" href="https://css-tricks.com/single-element-loaders-the-dots/"><i class="inline-block p-2 dots-1 text-gray-600"></i> • Temani Afif</a>
           <hr class="my-2">
           <a target="_blank" href="https://uiverse.io/profile/Voxybuns"><label class="switch" style="--slider-checked-color:gray;--switch-size:12px;"><span class="slider"></span></label> • Voxybuns</a>
@@ -307,7 +398,9 @@ html {
 
 <button class="rounded-r-xl ripple relative bg-gray-100 p-3 shadow-inner"><i class="text-gray-700 inline-block align-middle text-2xl sm:text-2xl mr-1.5 fa fa-save"></i><span class="ml-2 tooltip no-hover no-focus no-focus-within slide sm:show sm:relative absolute">save <code class="text-yellow-700 ml-2 text-xs font-semibold">{query, result}</code></span></button>
 <ul class="border-gray-300 border rounded-lg bg-gray-50 w-40 -ml-10 sm:m-0 sm:w-full text-left bottom-16 absolute tooltip [&>*]:rounded-inherit to-top" style="--arrow-size:5px;">
- <li class="hover:border-current border">
+ 
+  <li class="hover:border-current border"><button onclick="let SQL=page.asText(queries), download = `let query_result = {\n\tquery: \`${SQL+=';'.repeat(!/;$/.test(SQL))}\`${page.result?',\n\tresult:'+page.result:''}\n}`; save(new Blob([download], { type: 'application/javascript' }), 'query-result.js', page.result)" class="ripple relative w-full text-left text-sm"><i class="align-middle text-gray-500 border-r border-current inline-block fa fa-download mr-3 p-3 pr-2.5 text-2xl"></i>Download</button></li>
+  <li class="hover:border-current border">
 <!--pinata-->
 <button class="ripple relative ripple w-full text-left"><!--the button causes a focusin which retains the tooltip's visibility-->
 <img src="pinata.svg" class="mr-3.5 pointer-events-none inline-block w-12 border-r border-gray-500 p-2"><span class="text-sm inline-block">Pinata</span>
@@ -321,7 +414,7 @@ html {
           load.remove('show'), sm.textContent = 'smash the pinata!', sm.disabled=0,
           Abbr.to(out = this.querySelector('aside'), 'cL').add('show'), Abbr.to(out, 'lEC').innerText = both.format(JSON.stringify(json))
         }).catch(console.warn);
-        return false;" class="text-xs sm:text-sm text-left bg-white border-2 sm:bottom-0 absolute tooltip px-4 sm:py-4 py-2 sm:right-full bottom-full right-0"><i class="mr-1 fa fa-file"></i> File mode:
+        return false;" class="text-xs sm:text-sm text-left bg-white border-2 sm:bottom-0 absolute tooltip px-4 sm:py-4 py-2 sm:right-full bottom-full right-0" style="--delay:0.5s"><i class="mr-1 fa fa-file"></i> File mode:
           <div class="ml-3 my-2 inline-flex text-gray-700" onclick="let e=event.target, _i; slice(this.children).forEach((ch, i)=>ch.classList[ch==e?(_i=i, 'add'):'remove']('border-current')), slice(Abbr.to(this, ['nES', 'children'])).map((n, i)=>(n.classList[i==_i?'add':'remove']('show'), slice(n.querySelectorAll('input')))).forEach((arr, i)=>arr.forEach(el=>{ el[(i==_i?'set':'remove')+'Attribute']('required', '') }))">
             <button type="button" class="ripple relative p-2 rounded-br-lg text-current px-4 border-b-2 border-r-2 border-current">upload</button>
 <button type="button" class="relative p-2 border-l-2 rounded-tl-lg text-current px-4 ripple border-t-2">retrieve</button></div>
@@ -339,7 +432,7 @@ html {
 <!-- element for showing responses from Pinata, brought here to have a higher z-index that the fieldsets above -->
 <aside style="z-index:auto" class="tooltip no-hover top-16 bottom-24 no-focus no-focus-within absolute inset-0 bg-gray-50">
   <button type="button" onclick="Abbr.to(this, ['pN','cL']).remove('show')" class="right-0 ripple px-4 p-3 fa fa-times text-lg absolute border border-gray-600"></button>
-  <pre class="text-xs w-full h-full overflow-scroll pt-4 pb-8 word-break p-2 whitespace-pre-wrap pt-4"></pre>
+  <pre class="text-xs w-full h-full overflow-scroll pt-4 pb-8 word-break p-2 whitespace-pre-wrap pt-4">{<br>	"statusCode":500,"details":"{<br>	\"status\":500,\"error\":\"cid not found\"<br>}",<br>	"name":"NetworkError"<br>}</pre>
 </aside>
       <div class="relative float-right p-1.5">
         <span class="-left-6 top-1/2 no-hover no-focus tooltip slide absolute transform rotate-45"><hr class="border-white -mb-0.5 bottom-1/2 left-1/2 anim-round absolute border-4 border-yellow-600 rounded-full" style="animation:anim-round .8s ease-out infinite; --_reach: calc(-1*var(--reach)); --reach: 1.2rem;"></span>
@@ -347,7 +440,7 @@ html {
       </div>
 <i class="mt-0.5 w-full text-center inline-block text-xs sm:text-sm">Data upload/retrieval on the IPFS by <span class="font-fredoka">Pinata</span>, <a href="https://app.pinata.cloud/developers/keys" class="bg-yellow-400 p-1.5 inline-block" target="_blank">open an account</a> and/or fill the fields above to use it</i>
 </form>
- </li><li class="hover:border-current border"><button onclick="let SQL=page.asText(queries).replace(/\n+/g, ' ').trim(), download = `let query_result = {\n\tquery: \`${SQL+=';'.repeat(!/;$/.test(SQL))}\`${page.result?',\n\tresult:'+page.result:''}\n}`; save(new Blob([download], { type: 'application/javascript' }), 'query-result.js', page.result)" class="ripple relative w-full text-left text-sm"><i class="align-middle text-gray-500 border-r border-current inline-block fa fa-download mr-3 p-3 pr-2.5 text-2xl"></i>Download</button></li>
+ </li>
 
 </ul>
       </section>
@@ -358,10 +451,6 @@ html {
     <iframe frameborder="0" class="invisible pointer-events-none absolute top-0 " id="response" name="response" onload="let res; (res=this.contentWindow.document.body.textContent)&&receive(res)"></iframe>
 
 <script>
-
-w_Ev('onpopstate')(function(event) {
-  console.log('::BACK HISTORY::', event)
-});
 let delayed;
 function flash(node, delay, color, cb, cls) {
   (cls = node.classList).add(color), setTimeout(_=>{
@@ -370,10 +459,8 @@ function flash(node, delay, color, cb, cls) {
 }
 
 function receive(res, len, html='', btn) {
-  res=JSON.parse(res), Abbr.to(sendQuery, {2:'lC'}).data='apply query to database', Abbr.to(sendQuery, ['nES','cL']).replace('show', 'absolute'),/* remove "keepin it hot" fire svg */
+  res=JSON.parse(res), Abbr.to(sendQuery, {2:'lC'}).data='apply query to database', Abbr.to(sendQuery, ['nES','cL']).replace('show', 'absolute');/* remove "keepin it hot" fire svg */
   /*end of restoring state before sending query*/
-  // console.log('::RES::', res),
-  page.misc={user:1, host:1, port:1, database:1};/*perpetual truthies to aid reassignment to values provided in database URL*/
 
   if(!res.configured) return;
   else page.setup(configure.querySelector('main'), account.setup.value||res.configured), configure.querySelector('button').click();
@@ -390,9 +477,12 @@ function receive(res, len, html='', btn) {
   }
 
   if(res.result) {
+    account.query.value = '',
     /*green flash effect on query input area to signal success */
-    flash(queries, 600, 'bg-green-100', _=>{
-      res.result.length&&(Abbr.to(result, 'nES').querySelector('pre').innerText=page.result=both.format(JSON.stringify(res.result)))
+    flash(queries, 800, 'bg-green-100', _=>{
+      res.result.length&&(Abbr.to(result, 'nES').querySelector('pre').innerText=page.result=both.format(JSON.stringify(res.result).replace(/\\"/g, '')
+      .replace(/"\{/g, '{').replace(/\}"/g, '}')
+    ))
     });
     res.result.length&&result.classList.add('show');
     return
@@ -412,14 +502,16 @@ let DOMLoaded, vars=[], crE = (tag, attrs, values)=>(tag = document.createElemen
 
 w_Ev_dom(function(style, types) {
   animations.addRippleAnimations();
+  hljs.highlightAll();
   if(debug) return;
   delayed = qsa('.skeleton'), configure.classList.add('show'),
   (style=document.documentElement.style).backdropFilter == void 0&&style.setProperty('--bg-opacity-pad', 0.5),
   DOMLoaded = !0,
 
-  /*initial request to synchronize config variables with UI*/
-  account.local.value = page.isLocal,
-  account.submit(),
+  /*initial request to synchronize config variables with UI
+  is only done in the local instance of this webapp
+  */ 
+  (account.local.value = page.isLocal)&&account.submit(),
 
   types = crE('datalist', [], {id:'types'}), 
   ['DECIMAL(<N>, <N>)', 'FLOAT', 'BIGINT', 'INT', 'SMALLINT', 'TINYINT', 'FLOAT(<N>)', 'BIT(<N>)', 'JSON', 'YEAR', 'DATE', 'TIME', 'DATETIME', 'TIMESTAMP', 'CHAR(<N>)', 'BINARY(<N>)', 'VARCHAR(<N>)', 'VARBINARY(<N>)', 'TINYBLOB', 'TINYTEXT', 'BLOB', 'TEXT', 'MEDIUMBLOB', 'MEDIUMTEXT', 'LONGBLOB', 'LONGTEXT', 'ENUM(...)', ' SET(...)']
@@ -449,4 +541,4 @@ w_Ev_scroll(function(y) {
   pooled.classList[cLs(y>(/*vars[0]||=*/pooled.offsetTop))]('affix')
 })
 </script>
-</body></html>
+<datalist id="types"><option value="DECIMAL(<N>, <N>)"></option><option value="FLOAT"></option><option value="BIGINT"></option><option value="INT"></option><option value="SMALLINT"></option><option value="TINYINT"></option><option value="FLOAT(<N>)"></option><option value="BIT(<N>)"></option><option value="JSON"></option><option value="YEAR"></option><option value="DATE"></option><option value="TIME"></option><option value="DATETIME"></option><option value="TIMESTAMP"></option><option value="CHAR(<N>)"></option><option value="BINARY(<N>)"></option><option value="VARCHAR(<N>)"></option><option value="VARBINARY(<N>)"></option><option value="TINYBLOB"></option><option value="TINYTEXT"></option><option value="BLOB"></option><option value="TEXT"></option><option value="MEDIUMBLOB"></option><option value="MEDIUMTEXT"></option><option value="LONGBLOB"></option><option value="LONGTEXT"></option><option value="ENUM(...)"></option><option value=" SET(...)"></option></datalist><datalist id="types"><option value="DECIMAL(<N>, <N>)"></option><option value="FLOAT"></option><option value="BIGINT"></option><option value="INT"></option><option value="SMALLINT"></option><option value="TINYINT"></option><option value="FLOAT(<N>)"></option><option value="BIT(<N>)"></option><option value="JSON"></option><option value="YEAR"></option><option value="DATE"></option><option value="TIME"></option><option value="DATETIME"></option><option value="TIMESTAMP"></option><option value="CHAR(<N>)"></option><option value="BINARY(<N>)"></option><option value="VARCHAR(<N>)"></option><option value="VARBINARY(<N>)"></option><option value="TINYBLOB"></option><option value="TINYTEXT"></option><option value="BLOB"></option><option value="TEXT"></option><option value="MEDIUMBLOB"></option><option value="MEDIUMTEXT"></option><option value="LONGBLOB"></option><option value="LONGTEXT"></option><option value="ENUM(...)"></option><option value=" SET(...)"></option></datalist></body></html>
