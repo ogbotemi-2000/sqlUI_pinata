@@ -27,7 +27,7 @@ module.exports = async function(request, response) {
   config&&(config.PINATA_GATEWAY = data[2], config.PINATA_JWT = data[3]), 
   config||={ PINATA_GATEWAY: data[2], PINATA_JWT: data[3] };
   // uncomment if you desire storing and automatic configuring of web app by this service
-  local&&fs.writeFile(filePath, both.format(JSON.stringify(config)), _=>_);
+  // local&&fs.writeFile(filePath, both.format(JSON.stringify(config)), _=>_);
 
   // pinata.testAuthentication().then()
 

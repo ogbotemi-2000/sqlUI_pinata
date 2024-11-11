@@ -36,7 +36,7 @@ module.exports = async function(request, response) {
   if(setup||stored) {
     config&&(config.CONNECTION_STRING = setup||stored||''), config||={ CONNECTION_STRING: setup||stored };
     //The line of code below may be uncommented if it is desired for the service to store and configure the UI with the last stored connection string
-    local&&fs.writeFileSync(file, both.format(JSON.stringify(config)));
+    // local&&fs.writeFileSync(file, both.format(JSON.stringify(config)));
 
     if(!query) {
       /** absent query and present setup implies re-configuration of the app 
