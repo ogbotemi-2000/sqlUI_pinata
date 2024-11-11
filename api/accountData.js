@@ -17,14 +17,17 @@ module.exports = async function(request, response) {
       data = Buffer.concat(buffer).toString('utf-8'),
       resolve(parseMultipart(request, data))
     })
-  }),
+  }), dBParts,
+  isTimescale = /\.timescale\.com/.test((dBParts = both.dBParts(setup))[3]||''),
   config=fs.existsSync(file)&&require(file),
   stored = (config||{ }).CONNECTION_STRING, dB;
-
-  embedding = toSql(embedding.split(','));
+  /** make an array out of the received embedding to make toSql work properly */
+  embedding = toSql(embedding.replace(/\[|\]/g, '').split(','));
  
-  let qValues = { 1:[embedding] , 2: [metadata, embedding] }, match = query.match(/\$[0-9]/g), 
-  /* provide the empty values array with elements for queries that involve substitution */
+  let qValues = { 1:[embedding], 2: [metadata, embedding] }, match = query.match(/\$[0-9]/g), 
+  /* provide the empty values array with elements for queries that involve substitution
+     the queryConfig values are intented to be used with the queries from the RAG widget
+  */
   values = match?qValues[match.length].filter(e=>e):[], queryConfig = { text: query, values };
 
   /** clear results and errors for every single request */
@@ -33,7 +36,7 @@ module.exports = async function(request, response) {
   if(setup||stored) {
     config&&(config.CONNECTION_STRING = setup||stored||''), config||={ CONNECTION_STRING: setup||stored };
     //The line of code below may be uncommented if it is desired for the service to store and configure the UI with the last stored connection string
-    // local&&fs.writeFileSync(file, both.format(JSON.stringify(config)));
+    local&&fs.writeFileSync(file, both.format(JSON.stringify(config)));
 
     if(!query) {
       /** absent query and present setup implies re-configuration of the app 
@@ -49,8 +52,7 @@ module.exports = async function(request, response) {
     : /*a truthy instead of stored db string for security*/1,
     
     setup&&(dB = require('../db')({isMySQL, connectionString:setup}))
-    .then(operate)
-    .catch(err=>{
+    .then(operate).catch(err=>{
       data.errors[0] = stringErr(err, 'Cause: connection string provided for configuration contains a nonentity', 'Re-configure app and ensure that the provided database URL resolves to an actual database'),
       dB = null, response.json(data)
     });
@@ -69,7 +71,9 @@ module.exports = async function(request, response) {
   /* section that actually applies custom queries to the database */
   function operate(db) {
     db.pooled = pooled;
-    if(query) db.query(query, values).then(arr=>{
+    /*queryConfig is used exclusively on TimescaleDB hence the distinction
+    */
+    if(query) db.query(isTimescale ? queryConfig : query).then(arr=>{
       arr = arr.rows||arr,
       data.result = isMySQL ? arr[0] : arr
     }).catch(err=>data.errors[0] = stringErr(err, `Query: \`${query.split(/\s/).shift()}\``, 'Write syntactically correct queries and only specify fields or tables present in the the database or operations supported by the provider'))
@@ -85,7 +89,7 @@ module.exports = async function(request, response) {
         })
         .catch(err=>data.errors[0] = ['::DATABASE CONNECTION:: '+(/*data.version=*/err.message), 'Connect to the internet and/or remove typos in the environment variables for connecting the database'])
         .finally(_=>{
-          if(!a[++count]) data.version = "VERSION • " + data.version, response.json(data);
+          if(!a[++count]) data.version = "VERSION • " + data.version, data.database=dBParts[5], response.json(data);
         })
       })
     }

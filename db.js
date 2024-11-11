@@ -32,7 +32,7 @@ module.exports = function(args, parts) {
 	/** Neon.tech triggers ETIMEDOUT errors when drivers aside @neondatabase/serverless are used,
 	 *  isNeon is required to make this distinction for databases hosted on Neon.tech only
 	 */
-	isNeon = /\.neon\.tech/.test(connectionString),
+	isNeon,
 	config = {};
 
 	Object.defineProperty(config, 'toString', {
@@ -51,7 +51,9 @@ module.exports = function(args, parts) {
 	parts[5]&&parts[5].split('&').forEach(param=>{
 		let [key, value]  = param.split('=');
 		config[key.replace(/_[^]/, a=>a.replace('_', '').toUpperCase())] = value
-	});
+	}),
+	isNeon = /\.neon\.tech/.test(parts[2]);
+	
 	return new Promise(async (resolve, reject)=>{
 		if(args.isMySQL) {
 			
