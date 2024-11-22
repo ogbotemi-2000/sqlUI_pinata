@@ -12,14 +12,18 @@ fs.readFile('.env.development.local', (err, data)=>{
 
 let http   = require('http'),
     path   = require('path'),
-    config = fs.existsSync('./config.json')&&require('./config.json')||{PORT: process.env.PORT||8000},
+    file   = path.join(require('./rootDir')(__dirname), './sql_ui_config.json'),
+    config = fs.existsSync(file)&&require(file)||{...process.env},
     mime   = require('mime-types'),
-    { urlParts, parseMultipart }    = require('./utils'),
-    jobs   = {
+    { urlParts, parseMultipart } = require('./utils');
+    
+    config.PORT||=3000;
+
+    const jobs   = {
       GET:function(req, res, parts, fxn) {
         /** middlewares that respond to GET requests are called here */
-        fxn = fs.existsSync(fxn='.'+parts.url+'.js')&&require(fxn)
-        if(parts.query) req.query = parts.params, fxn&&fxn(req, res);
+        fxn = fs.existsSync(fxn='.'+parts.url+'.js')&&require(fxn),
+        req.query = parts.params, fxn&&fxn(req, res);
         return !!fxn;
       },
       POST:function(req, res, parts, fxn, buffer) {
@@ -36,7 +40,7 @@ let http   = require('http'),
 
           fxn&&fxn(req, res)
         });
-        /* no issue of returning earlyo before the callback above since fxn gets its value early on*/
+        /* no issue of returning early before the callback above since fxn gets its value early on*/
         if(!fxn) res.end();
         /** decided to return true instead of !!fxn since POST requests are not expected to GET html resources */
         return !!fxn;

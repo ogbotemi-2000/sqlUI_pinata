@@ -2,6 +2,7 @@ let data   = {},
 fs         = require('fs'),
 path       = require('path'),
 file       = path.join(require('../rootDir')(__dirname), './sql_ui_config.json'),
+config = fs.existsSync(file)&&require(file)||{...process.env},
 both       = require('../js/both'),
 stringErr  = (err, cause, fix)=>[`"${err.message}"<center>----------</center>${cause}, code: ${err.code} with severity: \`${err.severity||'&lt;N/A&gt;'}\` for sqlState: \`${err.sqlState||'&lt;N/A&gt;'}\`, at position \`${err.position||'&lt;N/A&gt;'}\` for operation \`${err.routine||'&lt;N/A&gt;'}\``, fix],
 { toSql }  = require('pgvector/pg'),
@@ -19,8 +20,7 @@ module.exports = async function(request, response) {
     })
   }), dBParts,
   isTimescale = /\.timescale\.com/.test((dBParts = both.dBParts(setup))[3]||''),
-  config=fs.existsSync(file)&&require(file),
-  stored = (config||{ }).CONNECTION_STRING, dB;
+  stored = config.CONNECTION_STRING, dB;
   /** make an array out of the received embedding to make toSql work properly */
   embedding = toSql(embedding.replace(/\[|\]/g, '').split(','));
  
@@ -34,7 +34,7 @@ module.exports = async function(request, response) {
   data.result='', data.errors = [];
 
   if(setup||stored) {
-    config&&(config.CONNECTION_STRING = setup||stored||''), config||={ CONNECTION_STRING: setup||stored };
+    config.CONNECTION_STRING = setup||stored||'';
     //The line of code below may be uncommented if it is desired for the service to store and configure the UI with the last stored connection string
     // local&&fs.writeFileSync(file, both.format(JSON.stringify(config)));
 
