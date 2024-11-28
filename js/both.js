@@ -1,5 +1,6 @@
 let both = {
 	dBParts: (dbString)=>{
+	if(!dbString) return;
     let parts =[], sls =['0,-3', '0,-1'], S=(s,a)=>s.slice(...a), rgxes = [/^[^/]+\/+/, /^[^:]+:/, /[^]+@/];
     /*avoided redundancy for similar elements*/sls.push(sls[1], sls[1], sls[1], sls[1], ''), rgxes.push(rgxes[1], rgxes[0], /^[^?]+\?/, /[^]+/),
 		sls.forEach((slice, i)=>{

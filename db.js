@@ -4,8 +4,7 @@ let mysql 					   = require('mysql2/promise'),
 	pg						   =  require('pg'),
 	{ Pool, Client }	   = pg,
 	{ /*Pool,*/ neon, neonConfig } = require('@neondatabase/serverless'),
-	ws 						   = require('ws'), 
-	{ registerTypes }		   = require('pgvector/pg');
+	ws 						   = require('ws');
 
 /** setting up PostgreSQL driver for pooling */
 neonConfig.webSocketConstructor = ws;
@@ -20,9 +19,11 @@ let db = {
 	query: function(query, args) {
 		return new Promise((res, rej)=>{
 			/** the makeshift event-callback pattern below is needed to avoid errors when the connection is pooled - which seems to take a fraction longer */
+			typeof query=='object'&&(args = query.values, query=query.text),
 			this.on('pooled', function(conn) {
-			  conn.query(query, args).then(res).catch(rej),
-			  db.pooled ? conn.release() : conn.end()
+			  conn.query(query, args).then(res).catch(rej)
+			  // db.pooled ? conn.release() : conn.end&&conn.end() 
+//conn.end is null in neon driver
 			})
 		})
 	  }
@@ -57,7 +58,7 @@ module.exports = function(args, parts) {
 	return new Promise(async (resolve, reject)=>{
 		if(args.isMySQL) {
 			mysql.createConnection(config).then(conn=>db.cb(db.conn[0]=conn, resolve(db))).catch(reject),
-			await mysql.createPool(connectionString).getConnection().then(conn=>db.cb(db.conn[1]=conn, resolve(db))).catch(reject),
+			await mysql.createPool(config).getConnection().then(conn=>db.cb(db.conn[1]=conn, resolve(db))).catch(reject),
 			db.pool=null/** to avoid errors from calling `end` on a pool that is not from a PostgreSQL connection */
 		} else {
 			try {
@@ -73,11 +74,14 @@ module.exports = function(args, parts) {
 				  resolve(db)
 				}).catch(reject),
 
-				db.conn[0] = isNeon 
-				  ? { query:(query, args)=>neon(connectionString)(query, args) }/** put in an object for similar API for conn.query in db object */
+				client = neon(connectionString),
+				db.conn[0] = isNeon
+				  /** basic polyfill for positional arguments on neondatabase driver */ 
+				  ? { query:(query, args)=>((args||=[]).forEach(arg=>query=query.replace(/\$[0-9]/, arg)), client(query))}
 				  : (client = new Client({ connectionString }), await client.connect(), client),
-				/** create vector extension for operating on vector embeddings, registerTypes */
-				await db.query('CREATE vector IF NOT EXISTS vector'), registerTypes(db.conn[0]),
+				/** create vector extension for operating on vector embeddings. registerTypes crashes this server by querying non-existent columns in some databases */
+				await db.query('CREATE EXTENSION IF NOT EXISTS vector'), 
+				// registerTypes(db.conn[0]),
 				resolve(db)
 			} catch (err) { reject(err) }
 		}

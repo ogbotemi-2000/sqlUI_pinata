@@ -34,10 +34,10 @@ function save(blob, name, result) {
   }
 }
 
-const Ev = node=>ev=>(cb, obj)=>/^on/.test(ev)?node[ev]=cb:node[node.attachEvent?'attachEvent':'addEventListener'](ev, cb, obj),
-      w_Ev = Ev(window), w_Ev_dom = w_Ev('DOMContentLoaded'), w_Ev_rz = w_Ev('resize'),
-      w_Ev_scroll = w_Ev('scroll'),
-      cLs =bool=>bool?'add':'remove';
+const Ev = ev=>node=>(cb, obj)=>/^on/.test(ev)?node[ev]=cb:node[node.attachEvent?'attachEvent':'addEventListener'](ev, cb, obj),
+      W = window, w_Ev_dom = Ev('DOMContentLoaded')(W), w_Ev_rz = Ev('resize')(W),
+      w_Ev_scroll = Ev('scroll')(W),
+      cLs =bool=>bool?'add':'remove', N=(n,i,s,a)=>{ for(n+=i||=0, s||=1, a=[]; i<n; a.push(i+=s));  return a; };
 
 /*self contained component*/
 function grow_shrink(e,i,c,n,d,k, cls){

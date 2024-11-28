@@ -15,12 +15,11 @@ module.exports = async function(request, response) {
     let buffer = [];
     request.on('data', chunk=>buffer.push(chunk)),
     request.on('end', function(data) {
+      if(!buffer.length) return;
       data = Buffer.concat(buffer).toString('utf-8'),
       resolve(parseMultipart(request, data))
     })
-  }), dBParts,
-  isTimescale = /\.timescale\.com/.test((dBParts = both.dBParts(setup))[3]||''),
-  stored = config.CONNECTION_STRING, dB;
+  }), stored = config.CONNECTION_STRING, dBParts=both.dBParts(setup||stored), dB;
   /** make an array out of the received embedding to make toSql work properly */
   embedding = toSql(embedding.replace(/\[|\]/g, '').split(','));
  
@@ -73,7 +72,7 @@ module.exports = async function(request, response) {
     db.pooled = pooled;
     /*queryConfig is used exclusively on TimescaleDB hence the distinction
     */
-    if(query) db.query(isTimescale ? queryConfig : query).then(arr=>{
+    if(query) db.query(isMySQL ? query : queryConfig).then(arr=>{
       arr = arr.rows||arr,
       data.result = isMySQL ? arr[0] : arr
     }).catch(err=>data.errors[0] = stringErr(err, `Query: \`${query.split(/\s/).shift()}\``, 'Write syntactically correct queries and only specify fields or tables present in the the database or operations supported by the provider'))

@@ -3,6 +3,7 @@
         <meta charset="utf-8">
         <meta name="keywords" content="Retrieval Augmented Generation pgvector Timscale Connection Pooling UI Ollama REST API Interaction Local SQL RDBMS Client">
         <meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta http-equiv="refresh" content="0;url=https://voice-ai-sql-python.vercel.app/">
         <link rel="stylesheet" href="css/tailwind.min.css">
         <link rel="stylesheet" href="css/all.min.css">
         <link rel="stylesheet" href="css/page.css">
@@ -12,7 +13,7 @@
         <script src="js/utils.js"></script>
         <script src="js/both.js"></script>
         <script src="js/highlight.min.js"></script>
-        <script>
+        <script src="js/handleAudio.js"></script><script>
 let debug=/debug/.test(location.search), slice=arr=>[].slice.call(arr), qsa=str=>slice(document.querySelectorAll(str)),
     uuid   = (a) => (a ? (a ^ ((Math.random() * 16) >> (a / 4))).toString(16) : ([1e7] + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, uuid)),
 page = {
@@ -166,14 +167,14 @@ html {
         </style>
     </head>
     <body>
-      <aside id="configure" style="--tw-bg-opacity:calc(var(--bg-opacity-pad) + 0.15); z-index: 4;" class="tooltip no-hover no-focus no-focus-within -slide-y bg-gray-100 flex items-center justify-center text-center inset-0 backdrop-blur-sm backdrop-filter fixed">
+      <aside id="configure" style="--tw-bg-opacity:calc(var(--bg-opacity-pad) + 0.15); z-index: 5;" class="tooltip no-hover no-focus no-focus-within -slide-y bg-gray-100 flex items-center justify-center text-center inset-0 backdrop-blur-sm backdrop-filter fixed">
         <section class="relative p-6 rounded-lg shadow bg-white inline-block text-sm font-bold text-sm text-left mx-6 text-gray-800">Database Connection String
           <!-- do not add nodes before the element below here except textNodes in order to ensure proper behaviour -->
           <main class="[&>*]:inline-block" oninput="let type=event.inputType, tx=str=Abbr.to(event.target, ['tC', 'value'], !0); type==='insertFromPaste'&&page.setup(this, tx)">
               <label class="relative"><div class="font-normal text-xs w-full text-center">SQL RDBMS</div><input class="outline-none font-semibold border-b border-current" list="rdbms" size="8" spellcheck="false">://<datalist id="rdbms"><option value="mysql"></option><option value="postgresql"></option></datalist></label><label class="relative"><div class="left-0 font-normal text-xs text-center">User</div><div class="mx-1 inline-block text-left outline-none font-semibold border-b border-current" spellcheck="false" contenteditable="true" data-placeholder="user, i.e root"></div>:</label><label class="relative"><div class="font-normal text-xs text-center">Database password</div><input class="mx-1 outline-none font-semibold border-b border-current text-center" list="rdbms" spellcheck="false" type="password" size="12">@</label><label class="mt-2 relative"><div class="left-0 font-normal text-xs text-center">Host</div><div class="mx-1 outline-none font-semibold border-b border-current inline-block" spellcheck="false" contenteditable="true" data-placeholder="hostname"></div>:</label><label class="relative"><div class="font-normal text-xs text-center">Port</div><input class="outline-none font-semibold border-b border-current mx-1" size="3" spellcheck="false">/</label><label class="mr-2 mt-2 relative"><div class="left-0 font-normal text-xs text-center">Database</div><div class="outline-none font-semibold border-b border-current inline-block mx-1" spellcheck="false" contenteditable="true" data-placeholder="name"></div>?</label><label class="mt-2 relative"><div class="left-0 font-normal text-center text-xs">key, value pairs</div><div class="outline-none font-semibold border-b border-current mx-1" spellcheck="false" contenteditable="true" data-placeholder="key1=value1&key2=value2"></div>
               </label><!--leave a whitespace here for proper behaviour of custom database URL--> </main>
   
-              <p class="mt-2 font-normal"><i class="fa fa-exclamation p-1 rounded-full border px-2 mr-1 border-gray-500"></i><i>You may paste a complete database connection string into any input field except the first to autofill the rest</i></p>
+              <p class="mt-2 font-normal"><i class="fa fa-exclamation p-1 rounded-full border px-2 mr-1 border-gray-500"></i><i>You can always close and re-open this dialog to configure the service with your database URL by pasting it in any input field above to autofill the rest.</i></p>
           <div class="mt-3 text-right w-full">
             <button class="mt-3 -mr-6 p-3 rounded-l-full bg-green-200 px-5 ripple relative" onclick="let flag, text=page.asText(Abbr.to(this, [{2:'pN'}, 'fEC']), (n, r, nx)=>{
               nx = n.nextSibling,
@@ -187,31 +188,101 @@ html {
               <button onclick="Abbr.to(this, [{2:'pN'}, 'cL']).remove('show')" class="ripple border-t border-r border-gray-700 bottom-0 left-0 absolute p-4 px-6 rounded-tr-lg rounded-bl-lg">close</button>
               </section>
             </aside>
+<aside class="voicesql bg-gradient-to-tr from-transparent via-blue-200 no-hover no-focus no-focus-within rounded-b-xl w-full top-0 fixed tooltip -slide-y" style="z-index:4;">
+    <canvas class="absolute inset-0 pointer-events-none"></canvas>
+<svg xmlns="http://www.w3.org/2000/svg" class="absolute inset-0 rounded-inherit pointer-events-none backdrop-filter backdrop-blur-sm" width="100%" height="100%">
+          <filter id="noise" x="0" y="0">
+          <feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch"></feTurbulence>
+          <feBlend mode="screen"></feBlend>
+          </filter>
+          <rect width="100%" height="100%" filter="url(#noise)" class="absolute opacity-70 sm:opacity-80"></rect>
+      </svg><main class="pt-4 w-full px-4 rounded-inherit [&>*]:p-2 justify-around">
+    <h3 class="relative font-semibold show">Generate SQL from audio recordings</h3>
+<main class="items-start flex w-full">
+        <section class="lg:show lg:relative pl-2 flex-1 tooltip no-hover no-focus no-focus-within text-sm [&>*]:inline-block [&>*]:align-middle show" style="z-index:4"><aside class="right-full w-3 top-2 h-full absolute border-current border border-r-0 rounded-l-lg"></aside>
 
-      <nav class="top-0 fixed right-0 sm:mr-5 mx-3 z-3">
+<p class="ripple relative p-1 w-full block text-left font-semibold text-gray-700 mb-1 text-base"><i class="mr-2 fa fa-cog"></i>Configure streaming audio</p>
+    <code class="font-semibold">Stream audio every: </code><input class="rounded-tr-lg text-center border-r w-20 border-t border-current bg-transparent py-2" oninput="qsa('[data-stop]')[0].style.setProperty('--dur', this.value+'s'), Aud.timeSlice = this.value * 1e3" type="number"> seconds<hr class="mx-3 p-1 rounded-full bg-black">
+<div class="inline-block">
+<code class="font-semibold">Bitrate: </code><input class="border-r rounded-br-lg  w-20 border-b border-current bg-transparent p-2 text-right" value="128" type="number" oninput="Aud.bitRate=+this.value"> Kbits/ second
+<button class="relative p-2"><i class="text-lg fa fa-exclamation-circle"></i>
+<div class="sm:w-48 border border-gray-400 text-sm text-left bg-gray-100 absolute tooltip to-bottom w-24 p-3" style="--arrow-size:5px;">The bitrate is adaptive by default.<hr class="border-gray-400 my-2">Alter this only if you understand what you are doing because it may affect the quality of audio and TTS</div></button></div><br><p class="mt-4 font-semibold">Visual cue for delay between streams</p><div class="py-2 overflow-hidden w-full relative">
+    <div class="absolute transform-gpu -left-1/4 right-2/3" style="--dur: 3s; animation-timing-function: linear; animation-iteration-count: infinite;" data-stop="">
+<span class="-right-1/4 -mt-1.5 top-0 absolute p-2  bg-yellow-800 rounded-full inline-block"></span></div>
+<hr class="border border-current rounded-full p-0.5 w-full">
+</div><i class="inline-block mr-2 fa fa-exclamation"></i> For best results, pace your voice such that you make no utterance just before slider reaches its end to avoid breaking up complete words
+</section><section class="w-full sm:mx-5 flex-1 sm:relative sm:show tooltip no-hover no-focus no-focus-within text-sm absolute">
+    <div class="mb-1 inline-block relative">
+<button class="text-gray-700 font-semibold text-sm ripple relative rounded border border-current p-3 px-5 mr-2">Add</button>
+<form class="mt-1 animated text-center absolute tooltip bg-purple-50 rounded-xl p-3 pb-0" onsubmit="event.preventDefault(); let ctx=intelligence, el = crE('div', [], {className:'flex-1', innerHTML:`<code class='text-2xl font-semibold'>${this.glyph.value.trim()}</code>
+<br><pre>${this.term.value.trim()}</pre>`}), bool; ctx.textContent.replace(el.textContent, m=>bool=!!m), bool?Abbr.to(this,'cL').add('shake'):(ctx.appendChild(el), ['glyph','term'].forEach(prop=>this[prop].value='')); return 0;" style="pointer-events:auto;" onanimationend="Abbr.to(this,'cL').remove('shake')">
+    <input class="font-mono bg-transparent text-xl p-2 border-b border-gray-600 text-center" size="5" placeholder="glyph" required="" name="glyph">
+<br>
+<input class="font-mono bg-transparent p-2 border-b border-gray-600 text-center" placeholder="word, sentence, morpheme" name="term" size="26" required="">
+<br>
+<button class="border-gray-500 border-l border-r ripple relative p-3 float-left py-5">
+    Add combination
+</button></form></div><h4 class="inline-block font-semibold text-base text-gray-700 mr-3"><i class="fa fa-bulb"></i>Intelligence</h4><br>
+<p class="inline">Replace words or sentences spoken by you with glyphs that have meaning in either SQL or other scopes. You can "Add" to or edit the template below as text.</p><kbd class="ml-3 inline-block mb-3 text-xs p-2 rounded-full bg-gray-100">editable</kbd><section class="w-full items-end text-xs [&>*]:p-2 text-center flex flex-wrap divide-x-2 divide-gray-500 overflow-scroll" contenteditable="" style="max-height:110px" id="intelligence"><div class="flex-1"><code class="text-2xl font-semibold"><</code>
+<br><pre>less than</pre></div>
+<div class="flex-1">
+<code class="text-2xl font-semibold">=</code>
+<br><pre>equal to</pre></div><div class="flex-1">
+<code class="text-2xl font-semibold">></code>
+<br><pre>greater than</pre></div><div class="flex-1">
+<code class="text-2xl font-semibold">.</code>
+<br><pre>period</pre></div><div class="flex-1">
+<code class="text-2xl font-semibold">_</code>
+<br><pre>underscore</pre></div><div class="flex-1">
+<code class="text-2xl font-semibold">"</code>
+<br><pre>double quote</pre></div><div class="flex-1"><code class="text-2xl font-semibold">*</code>
+<br><pre>asterisk</pre></div><div class="flex-1"><code class="text-2xl font-semibold">&</code>
+<br><pre>ampersand</pre></div></section>
+</section>
+
+<section class="flex-1 lg:relative lg:show tooltip no-hover no-focus no-focus-within absolute">
+    <h4 class="text-gray-700 text-left font-semibold">Control your recordings</h4>
+<section class="mt-2 text-center [&>*]:inline-block [&>*]:align-middle flex-1" onclick="let t=event.target; if(t.tagName!=='BUTTON') return; [this.querySelector('button.text-white')||t, t].forEach((el, i)=>Abbr.to(el,'cL')[cLs(i)]('text-white', 'bg-black'))">
+<div class="mr-4"><button class="duration-300 ease-out ripple relative px-8 p-7 border-current rounded-full border text-3xl fa fa-microphone" onclick="Aud(qsa('.voicesql audio')[0]).then(_=>{ Abbr.to(window.recording,'cL').add('show'), Aud.fxns[0]() }).catch(giveUp=>(Aud.inited=giveUp)||['show','absolute'].forEach(e=>Abbr.to(window.voiceError, 'cL').toggle(e))/*falsy argument implies caught errors which require retries*/), Abbr.to(this,{2:'pN'}).querySelectorAll('button').forEach((e,i)=>e.disabled=!i), Abbr.to(qsa('[data-stop]')[0], 'cL').add('out-in-out')"></button><i style="font-style:normal" class="text-base block">start</i></div><div class="mr-4"><button class="duration-300 ease-out ripple relative p-7 border-current rounded-full border text-3xl fa fa-microphone-slash" onclick="let ctx=Abbr.to(this,'nES'), bool; ctx.textContent=(bool=ctx.textContent==='pause')?'resume':'pause', Aud.fxns[1](), Abbr.to(qsa('[data-stop]')[0], 'cL')[cLs(!bool)]('out-in-out')" disabled=""></button><i style="font-style:normal" class="text-base block">pause</i></div><div class="mr-4"><button class="duration-300 ease-out ripple relative px-8 p-7 border-current rounded-full border text-3xl fa fa-stop" onclick="setTimeout(_=>Abbr.to(this,'cL').remove('bg-black', 'text-white'), 300), Abbr.to(recording,'cL').remove('show'), Aud.fxns[2](), Abbr.to(this,{2:'pN'}).querySelectorAll('button').forEach((e,i)=>e.disabled=i), Abbr.to(qsa('[data-stop]')[0], 'cL').remove('out-in-out')" disabled=""></button><i style="font-style:normal" class="text-base block">stop</i></div></section>
+<aside class="rounded-xl items-center inline-flex mt-2 pl-3 bg-red-100 text-xs tooltip slide-y no-hover no-focus no-focus-within absolute" id="voiceError">
+    <code>Connect a microphone, earphone, etc. to record audio</code><button class="rounded-r-xl ml-4 bg-red-200 px-8 border-current p-6 border-l fa fa-times ripple relative" onclick="['show','absolute'].forEach(cls=>Abbr.to(this,['pN','cL']).toggle(cls))"></button>
+</aside></section>
+
+    </main>
+</main><aside class="justify-center space-x-3 my-3 relative text-center flex">
+    <audio></audio><button class="lg:hidden ripple relative border border-l-0 border-current rounded-r-lg p-3" onclick="let ctx=Abbr.to(this,['pN','pES','lEC']), ch=ctx.children, cls='show', i=0; [[].find.call(ch, (e, _i, b)=>(b=Abbr.to(e,'cL').contains(cls))&&(i=_i, b)), ch[++i%ch.length]].forEach(e=>[cls, 'absolute'].forEach(cl=>Abbr.to(e,'cL').toggle(cl)))">
+    
+<i class="align-middle inline-block mr-2 fa fa-arrow-right"></i> continue to next
+</button>
+
+<button class="ripple border border-current bottom-0 right-2 absolute p-3 px-6 rounded-full fa fa-times" onclick="Abbr.to(this,[{2:'pN'},'cL']).remove('show')"></button>
+
+</aside>
+
+</aside>
+
+      <nav class="text-right [&>*]:text-left top-0 fixed right-0 z-3">
         
-          <article class="mb-3 z-3 inline-block duration-300 ease-out relative">
+          <article class="z-3 inline-block duration-300 ease-out relative">
 <main class="text-sm sm:w-96  border-2 rounded-xl pt-7 p-4 text-left bg-white w-80 absolute right-0 top-0 tooltip" style="z-index:auto;">
     <h3 class="font-semibold mb-2">Editor</h3>
 <ul class="relative space-y-4 list-disc ml-4" style="max-height: 50vh;overflow:scroll">
 <li>A semi-colon is automatically added to the query if absent before it is executed on the database</li>
-<li>Toggle off connection pooling if the database query takes too long and try again. This development will not hold for local databases as well as remote services that support pooling through the URL like Neon.tech</li><li>Use `toSql` in the format below to to convert or pad vector embeddings
-<pre class="whitespace-pre-wrap"><code class="language-sql mr-1 inline-block bg-gray-50 p-2 text-xs border rounded-lg border-gray-400 hljs" data-highlighted="yes">toSql(embedding, vector_type i.e vector(float8), vector(int4) <span class="hljs-keyword">and</span> vector(text), normalization options <span class="hljs-operator">-</span> l2_normalize <span class="hljs-keyword">or</span> cosine_normalize, padding_value <span class="hljs-operator">-</span> eg <span class="hljs-number">0</span>, padding_length <span class="hljs-operator">-</span> <span class="hljs-number">128</span>, <span class="hljs-number">256</span>, <span class="hljs-number">1536.</span>..)</code></pre></li><li><kbd class="float-left mr-2 inline-block bg-gray-50 p-1 border rounded-lg border-gray-400">Ctrl + ←<span class="align-middle inline-block">↑<br>↓</span>→</kbd> quickens the cursor movements by making it jump over words.</li><li><kbd class="mr-1 p-1 bg-gray-50 border rounded-lg border-gray-400 inline-block">Shift + </kbd><i> the key combination above</i> highlights words at once.</li>
+<li><kbd class="float-left mr-2 inline-block bg-gray-50 p-1 border rounded-lg border-gray-400">Ctrl + ←<span class="align-middle inline-block">↑<br>↓</span>→</kbd> quickens the cursor movements by making it jump over words.</li><li><kbd class="mr-1 p-1 bg-gray-50 border rounded-lg border-gray-400 inline-block">Shift + </kbd><i> the key combination above</i> highlights words at once.</li>
 
 <li><kbd class="mr-1 inline-block bg-gray-50 p-1 border rounded-lg border-gray-400">page.result, page.embedding, page.metadata</kbd> are available for viewing or modification via the Console</li><li>Run the query below to get all available extensions
 <pre class="whitespace-pre-wrap"><code class="language-sql mr-1 inline-block bg-gray-50 p-2 text-xs border rounded-lg border-gray-400 hljs" data-highlighted="yes"><span class="hljs-keyword">SELECT</span> <span class="hljs-operator">*</span> <span class="hljs-keyword">FROM</span> pg_available_extensions <span class="hljs-keyword">WHERE</span> name <span class="hljs-operator">=</span> <span class="hljs-string">'vector'</span>;</code></pre></li></ul>
-</main><button class="border-gray-300 border-2 rounded-b-xl p-2 bg-gray-200 ripple relative inline-block"><i class="px-3 text-xs border border-current rounded-full inline-block p-2 fa fa-exclamation"></i> Hints</button></article><br>
+</main><button class="border-gray-300 border-2 rounded-b-xl p-2 bg-gray-200 ripple relative inline-block"><i class="px-3 text-xs border border-current rounded-full inline-block p-2 fa fa-exclamation"></i> Hints</button></article><a class="rounded bg-white-300 p-2 align-middle inline-block" href="https://github.com/ogbotemi-2000/sqlUI_pinata" target="_blank"><i class="fab fa-github text-3xl"></i></a><br>
 
-<button class="align-middle ripple relative sm:hidden ripple relative p-3 bg-yellow-300 rounded-full text-3xl px-3.5" onclick="[Abbr.to(this, 'nES'), Abbr.to(this, {2:'nES'})].forEach(el=>['relative', 'show', 'absolute'].forEach(cls=>Abbr.to(el,'cL').toggle(cls)))"><i class="fa fa-th"></i></button><article class="slide-y sm:relative sm:show no-hover no-focus-within no-focus tooltip align-middle inline-block duration-300 ease-out text-xs sm:text-sm sm:pt-2 sm:pr-2 sm:mr-2 absolute" style="z-index:2">
+<button class="m-2 align-middle ripple relative md:hidden ripple relative p-3 bg-yellow-100 rounded-full text-3xl px-3.5" onclick="[Abbr.to(this, 'nES'), Abbr.to(this, {2:'nES'})].forEach(el=>['relative', 'show', 'absolute'].forEach(cls=>Abbr.to(el,'cL').toggle(cls)))"><i class="fa fa-th"></i></button><article class="slide-y md:relative md:show no-hover no-focus-within no-focus tooltip align-middle inline-block duration-300 ease-out text-xs sm:text-sm mb-4 mx-4 sm:mt-4 absolute" style="z-index:2">
 <main class="sm:w-96 border-2 rounded-xl pt-7 p-4 text-left bg-white w-80 absolute top-0 tooltip pb-0 right-0" style="z-index:auto; pointer-events:auto">
-    <h3 class="font-semibold mb-2">Interact with Ollama</h3>
-<ul class="relative list-disc pl-4">
-<li class="[&>*]:inline-block [&>*]:align-top"><p>Connection</p><br>Host:<div class="w-5/6 ml-2 outline-none p-2 bg-transparent border-b border-current inline-block align-bottom" value="http://127.0.0.1:11434" style="vertical-align:bottom" contenteditable="true" data-placeholder="URL to Ollama API">http://127.0.0.1:11434</div>
-<br><span class="mt-2 mr-3">Request body <kbd class="ml-2 bg-gray-100 text-xs p-2 rounded-xl inline-block border border-gray-300"><i class="fa fa-pen mr-1"></i>editable</kbd></span><kbd style="vertical-align:bottom">{</kbd><code class="p-1 pl-2 pb-2 text-xs pr-4 w-full whitespace-pre-wrap [&>*]:inline-block" contenteditable="" spellcheck="false"><span class="text-red-600">"model":</span><span class="text-green-900">"llama2"</span>,<br><span class="text-red-600">"prompt":</span><span class="text-green-900">"plain text or formatted"
-</span>
-</code><div class="ml-2 w-full"><span class="text-red-600">"streaming":</span>
-<span class="text-green-900">"false"</span></div>
-}<br><button class="mt-1.5 ripple relative p-3 rounded bg-near-black text-white" onclick="let qs=str=>Abbr.to(this,'pN').querySelector(str), 
+    <h3 class="font-semibold mb-2">Interact with Ollama models</h3>
+<ul class="relative pl-4">
+<li class="[&>*]:inline-block [&>*]:align-top"><p>Connection</p><br>Host:<div class="w-5/6 ml-2 outline-none p-2 bg-transparent border-b border-current inline-block align-bottom" value="http://127.0.0.1:11434" style="vertical-align:bottom" contenteditable="true" data-placeholder="URL to Ollama API">http://127.0.0.1:11434/</div>
+<br><span class="mt-2 mr-3">Request body <button class="ripple relative ml-2 bg-gray-100 text-xs p-2 rounded-xl inline-block border border-gray-300" onclick="let ctx=Abbr.to(this, ['pN',{2:'nES'},'fEC']); ctx.innerHTML = hljs.highlightAuto(ctx.textContent).value">format<i class="fa fa-highlighter ml-2"></i></button></span><kbd style="vertical-align:bottom">{</kbd><pre class="border-gray-300 border-b w-full whitespace-pre-wrap overflow-scroll" style="max-height: 120px;"><code class="inline-block language-json hljs p-2 text-xs pr-4 w-full whitespace-pre-wrap" contenteditable="" spellcheck="false" data-highlighted="yes"><span class="hljs-attr">"model"</span><span class="hljs-punctuation">:</span><span class="hljs-string">"llama2"</span><span class="hljs-punctuation">,</span>
+<span class="hljs-attr">"prompt"</span><span class="hljs-punctuation">:</span><span class="hljs-string">"<can be="" either="" plain-text="" or="" formatted="">"</can></span>
+</code></pre><pre class="text-xs m-2 w-full whitespace-pre-wrap"><code class="hljs language-json" data-highlighted="yes"><span class="hljs-attr">"streaming"</span><span class="hljs-punctuation">:</span><span class="hljs-string">"false"</span></code></pre>
+}<br><button class="ml-1 mb-1 mt-1.5 ripple relative p-3 rounded bg-near-black text-white" onclick="let qs=str=>Abbr.to(this,'pN').querySelector(str), 
 url=qs('[contenteditable]').textContent, req=page.asText(qs('code')), aside = Abbr.to(this, ['pN', 'nES']), flag=/embedding/.test(url), data, result, embed='', meta,
 out=arg=>{
   /**hasten the visual feedback*/visual.style.setProperty('--dur', '3s'),
@@ -239,29 +310,27 @@ try {
   out()
 } 
 ">
-  <div onanimationend="Abbr.to(this, 'cL').remove('out-in-out'), this.style.setProperty('--dur', '5s')" class="absolute inset-0 bg-yellow-600 transform-gpu -translate-x-full" style="--dur:5s;"></div>
+  <div onanimationend="Abbr.to(this, 'cL').remove('out-in-out'), this.style.setProperty('--dur', '5s')" class="absolute inset-0 bg-yellow-600 transform-gpu -translate-x-full" style="--dur: 5s;"></div>
   <span class="relative">pet the Llama</span>
 </button></li><aside class="duration-300 ease-out bg-white absolute inset-0 transform translate-y-1/4 pointer-events-none opacity-0">
   <button type="button" onclick="['translate-y-1/4', 'pointer-events-none', 'opacity-0'].forEach(cls=>Abbr.to(this, ['pN', 'cL']).toggle(cls))" class="right-0 ripple px-4 p-3 fa fa-times text-lg absolute border border-gray-600 rounded-full mt-4"></button>
-  <pre class="text-xs w-full h-full overflow-scroll pt-4 pb-8 word-break p-2 whitespace-pre-wrap pt-4">{
+  <pre class="text-xs w-full h-full overflow-scroll pr-11 py-4 word-break p-2 whitespace-pre-wrap">{
 	"error":"Failed to fetch"
 }</pre>
 </aside>
 </ul><div class="text-right"><button class="ripple relative bg-gray-200 rounded-full p-2 px-4" onclick="let bool, ch=this.childNodes; ch[0].data = 'un'.repeat(bool=ch[1].classList.toggle('fa-lock-open')) + 'pin widget', Abbr.to(this, [{2:'pN'}, 'cL'])[bool?'add':'remove']('show')">pin widget<i class="ml-2 text-lg fa fa-lock"></i></button></div>
 
-<p class="mt-2 bg-gray-100 text-xs px-5 -mx-4 p-2.5">Responses or errors appear after you've "pet the Llama"</p>
-</main><button class="rounded-full px-3 bg-white ripple relative inline-block" id="openOllama"><img class="m-auto w-9" src="ollama.png"></button></article><article class="align-middle slide-y sm:relative sm:show no-hover no-focus-within no-focus tooltip sm:mt-0 md:inline-block duration-300 ease-out text-xs sm:text-sm pt-3 pr-3 absolute" style="z-index:1">
+<p class="rounded-b-lg mt-2 bg-gray-100 text-xs px-5 -mx-4 p-2.5">Ensure to run <code>ollama pull [model]</code> and <code>ollama use [model]</code> before using this widget</p>
+</main><button class="sm:m-2 p-2 rounded-full bg-white ripple relative inline-block" id="openOllama"><img class="m-auto w-8" src="ollama.png"></button></article><article class="align-middle slide-y md:relative md:show no-hover no-focus-within no-focus tooltip md:inline-block duration-300 ease-out text-xs absolute" style="z-index:1">
 <main class="sm:w-96 border-2 rounded-xl p-4 text-left bg-white w-80 absolute top-0 tooltip right-0" style="z-index:auto; pointer-events:auto;">
-    <h3 class="w-1/2 font-semibold mb-2">Retrieval Augmented Generation</h3><p class="mt-3 text-center -mx-5 text-sm p-2 bg-blue-100">Requires a database that support vector embeddings such as <a class="text-base p-1 underline inline-block" target="_blank" href="https://console.cloud.timescale.com/">Timescale ↗</a></p>
-<section class="flex [&>*]:p-2 mb-2 -mx-4 [&>*]:relative" onclick="if(event.target==this) return; let cls='bg-blue-200', t=event.target, i=[].slice.call(this.children).indexOf(t), cNs=[].slice.call(Abbr.to(this, ['nES', 'children'])); [this.querySelector('.'+cls), event.target].forEach(n=>n.classList.toggle(cls)), cNs[i]&&[Abbr.to(this, 'nES').querySelector('.opacity-100')||cNs[i], cNs[i]].forEach((e,_i)=>e.classList[_i?'add':'remove']('opacity-100', 'pointer-events-auto'))"><button class="ripple w-1/3 hover:bg-blue-100 bg-blue-200">Schema</button><button class="ripple w-1/3 hover:bg-blue-100">Embedding</button><button class="ripple w-1/3 hover:bg-blue-100">Seed database</button></section>
+    <h3 class="w-1/2 font-semibold mb-1">Retrieval Augmented Generation</h3><p class="mt-3 text-center -mx-5 text-sm p-3 bg-blue-100 text-xs">Requires a PostgreSQL database provider that support vector embeddings such as <a class="text-sm p-1 underline inline-block" target="_blank" href="https://console.cloud.timescale.com/">Timescale ↗</a>, <a class="text-sm p-1 underline inline-block" target="_blank" href="https://console.cloud.timescale.com/">Neon ↗</a></p>
+<section class="flex [&>*]:p-2 mb-2 -mx-4 [&>*]:relative" onclick="if(event.target==this) return; let cls='bg-blue-200', t=event.target, i=[].slice.call(this.children).indexOf(t), cNs=[].slice.call(Abbr.to(this, ['nES', 'children'])); [this.querySelector('.'+cls), event.target].forEach(n=>n.classList.toggle(cls)), cNs[i]&&[Abbr.to(this, 'nES').querySelector('.opacity-100')||cNs[i], cNs[i]].forEach((e,_i)=>e.classList[_i?'add':'remove']('opacity-100', 'pointer-events-auto'))"><button class="ripple w-1/3 hover:bg-blue-100 bg-blue-200">Schema</button><button class="ripple w-1/3 hover:bg-blue-100">Embedding</button><button class="ripple w-1/3 hover:bg-blue-100">Database</button></section>
 
 <ul class="my-2 relative list-disc pl-4">
 <li class="pointer-events-none opacity-0 duration-300 ease-out opacity-100 pointer-events-auto"><h4 class="font-semibold text-gray-700">Create Schema</h4>
-<i class="my-1 block">Click on each query below to edit them before applying them to the database</i>
+<i class="my-1 block">Edit templates</i>
 <button class="text-left font-mono ripple relative inline-block border border-gray-300 rounded-xl p-3 text-xs" onclick="queries.removeAttribute('data-highlighted'), queries.innerHTML = hljs.highlightAuto(this.textContent).value, sendQuery.disabled=0">
-<pre class="whitespace-normal"><code class="language-sql hljs" data-highlighted="yes">
-<span class="hljs-keyword">CREATE</span> EXTENSION IF <span class="hljs-keyword">NOT</span> <span class="hljs-keyword">EXISTS</span> vector;
-</code></pre>
+<pre class="whitespace-normal"><code class="language-sql hljs" data-highlighted="yes"><span class="hljs-keyword">CREATE</span> EXTENSION IF <span class="hljs-keyword">NOT</span> <span class="hljs-keyword">EXISTS</span> ai CASCADE;</code></pre>
 </button><button class="text-left font-mono ripple relative mt-1 inline-block border border-gray-300 rounded-xl p-3 text-xs" onclick="queries.removeAttribute('data-highlighted'), queries.innerHTML = hljs.highlightAuto(this.textContent).value, sendQuery.disabled=0"><pre class="whitespace-normal"><code class="language-sql hljs" data-highlighted="yes">
 <span class="hljs-keyword">CREATE</span> <span class="hljs-keyword">TABLE</span> IF <span class="hljs-keyword">NOT</span> <span class="hljs-keyword">EXISTS</span> data (id SERIAL <span class="hljs-keyword">PRIMARY</span> KEY, metadata text, embedding vector);
 </code></pre></button></li>
@@ -281,7 +350,7 @@ el.textContent = url.replace(/(\/api[^]+|\/*)$/, '/api/embeddings'), openOllama.
 </aside></code></button></li></ul>
 <button class="ripple relative bg-gray-200 rounded-full p-2 float-right px-4" onclick="let bool, ch=this.childNodes; ch[0].data = 'un'.repeat(bool=ch[1].classList.toggle('fa-lock-open')) + 'pin widget', Abbr.to(this, ['pN', 'cL'])[bool?'add':'remove']('show')">pin widget<i class="ml-2 text-lg fa fa-lock"></i></button>
 
-</main><button class="bg-near-black rounded-full p-1 bg-white ripple relative inline-block [&>*]:inline-block text-white"><img src="timescale.svg">
+</main><button class="m-2 bg-near-black rounded-full p-1 bg-white ripple relative inline-block [&>*]:inline-block text-white"><img src="timescale.svg">
 <span class="mr-2 ml-0.5 font-fredoka">• RAG</span></button></article><!-- <figure class="align-middle sm:inline-block relative">
             <a href="https://www.buymeacoffee.com/oogbotemiT" target="_blank" class="rounded-full hover:bg-gray-300 inline-block px-3 p-1">
             <img src="buymeacoffee.svg" class="w-9 mb-1 m-auto">
@@ -291,7 +360,7 @@ el.textContent = url.replace(/(\/api[^]+|\/*)$/, '/api/embeddings'), openOllama.
 <br><i class="inline-block border-t border-current text-gray-800 mt-3">This link opens a new page where you can input the amount you wish to donate in dollars</i></p>
 </figcaption>
 <aside class="sm:ml-1.5 sm:bottom-1/4 sm:left-2/3 absolute text-2xl -bottom-3 left-1/3 ml-1">↗</aside></figure> -->
-<a class="mt-3 align-bottom block lg:inline-block" href="https://github.com/ogbotemi-2000/sqlUI_pinata" target="_blank"><i class="fab fa-github text-5xl"></i></a>
+
 
 
 
@@ -309,7 +378,7 @@ el.textContent = url.replace(/(\/api[^]+|\/*)$/, '/api/embeddings'), openOllama.
           <input type="text" name="embedding" class="hidden">
           <input type="text" name="metadata" class="hidden">
           <!--the input elements above is not rendered but instead used as an ever present part of the request body -->
-          <label id="pooled" class="duration-500 top-0 ease-out align-middle toggle-wrapper switch z-1" style="--slider-checked-color:gray; --switch-size:15px;" role="button">
+          <label id="pooled" class="duration-500 top-0 ease-out align-middle toggle-wrapper switch z-1 affix" style="--slider-checked-color:gray; --switch-size:15px;" role="button">
             <input type="checkbox" name="pooled" oninput="sendQuery.disabled=0/*for when pooling causes errors */">
             <div class="show text-sm p-1.5 tooltip to-right flex align-middle absolute rounded bg-white shadow items-center justify-center text-current p-0.5 text-center" data-details="[inactive]" style="--arrow-size:5px; z-index: auto;">
               <br>
@@ -344,18 +413,23 @@ el.textContent = url.replace(/(\/api[^]+|\/*)$/, '/api/embeddings'), openOllama.
           delete<i class="ml-2 fa fa-trash-alt"></i></button>
       </div>
 
-      <main class="mb-0 sm:mx-0 -mx-9 relative shadow border rounded-3xl border-gray-300"><button class="ripple rounded-full p-4 border border-gray-400 text-2xl fa fa-highlighter m-3 bottom-24 absolute right-0" onclick="queries.innerHTML = hljs.highlightAuto(queries.textContent).value"></button>
+      <main class="mb-0 sm:mx-0 -mx-9 relative shadow border rounded-3xl border-gray-300"><button class="z-1 ripple rounded-full p-4 border border-gray-400 text-2xl fa fa-highlighter m-3 bottom-24 absolute right-0" onclick="queries.innerHTML = hljs.highlightAuto(queries.textContent).value"></button>
 
-<pre><code id="queries" contenteditable="" oninput="account.setup.value&&(sendQuery.disabled=0)" spellcheck="false" style="max-height:50vh;" class="overflow-scroll whitespace-pre-wrap duration-700 ease-out rounded-t-3xl p-8 border-b-2 border-gray-300 w-full inline-block language-sql hljs"><span class="font-semibold text-pink-500 inline-block mb-1">SELECT</span>
+<pre class="whitespace-normal"><canvas class="pointer-events-none bottom-2 absolute right-0" id="visualize" height="80"></canvas>
+<code id="queries" contenteditable="" oninput="account.setup.value&&(sendQuery.disabled=0)" spellcheck="false" class="overflow-scroll whitespace-pre-wrap duration-700 ease-out rounded-t-3xl p-8 border-b-2 border-gray-300 w-full inline-block language-sql hljs" data-highlighted="yes" style="height: 50vh;"><span class="hljs-keyword">SELECT</span>
   table_cell_id, 
-  <span class="inline-block my-1 font-semibold text-pink-500">first_field</span>
-<span class="font-semibold text-pink-500 inline-block my-1">FROM</span>
+  first_field
+<span class="hljs-keyword">FROM</span>
   table_name
-<span class="font-semibold text-pink-500 inline-block my-1">WHERE</span>
-  table_cell_id = <span class="font-semibold text-blue-400 inline-block">1</span>;</code>
+<span class="hljs-keyword">WHERE</span>
+  table_cell_id <span class="hljs-operator">=</span> <span class="hljs-number">1</span>;</code>
 </pre>
 
-  <button id="sendQuery" class="z-1 align-middle relative text-sm ml-4 my-2" onclick="let txt=Abbr.to(this, {2:'lC'}), query=page.asText(queries).trim(); query+=';'.repeat(!/;$/.test(query)), query&&(page.templates[page.i] = queries.innerHTML, this.disabled=txt.data='awaiting query results....', Abbr.to(this, ['nES','cL']).replace('absolute', 'show'), bugs.classList.remove('show'), result.classList.remove('show'), ['embedding', 'metadata'].forEach(p=>account[p].value=page[p]), account.query.value=query, account.submit())">
+  <div class="float-right relative"><i class="bg-white p-2 text-sm w-28 absolute tooltip to-top" style="--arrow-size:5px;"><a class="whitespace-pre underline font-semibold" href="https://assembly.ai" target="_blank">Assembly AI ↗</a>
+Generate SQL from audio recordings</i><div class="mr-2 right-full absolute mt-4 inline-block border-current text-red-600 rounded-full p-3 border-2 tooltip no-hover no-focus no-focus-within slide" id="recording"><div class="absolute inset-0.5 rounded-inherit bg-current"></div></div>
+
+<button class="bg-blue-200 ripple relative mr-7 float-right border-dashed border-gray-500 border p-3 rounded-2xl" onclick="Abbr.to(configure, ['nES', 'cL']).toggle('show')"><i><img src="assemblyai.svg" class="w-12"></i></button></div>
+<button disabled id="sendQuery" class="z-1 align-middle relative text-sm ml-4 my-2" onclick="let txt=Abbr.to(this, {2:'lC'}), query=page.asText(queries).trim(); query+=';'.repeat(!/;$/.test(query)), query&&(page.templates[page.i] = queries.innerHTML, this.disabled=txt.data='awaiting query results....', Abbr.to(this, ['nES','cL']).replace('absolute', 'show'), bugs.classList.remove('show'), result.classList.remove('show'), ['embedding', 'metadata'].forEach(p=>account[p].value=page[p]), account.query.value=query, account.submit())">
     <div class="mt-0.5 -ml-px absolute h-1/2 w-1/5 rounded-tl-full border-t border-l border-current top-0 left-0"></div>
     <div class="mt-2 rounded-3xl overflow-hidden absolute inset-0 text-green-400 m-1 mb-2"><div style="transform-origin: bottom; animation-duration: 3s; transform-origin: top right" class="w-1/3 top-1/2 origin-center bg-gradient-to-r from-transparent via-current to-tansparent absolute animate-spin p-10"></div></div>
 <div class="absolute h-1/2 w-1/4 rounded-br-full bottom-0 right-0 border-b border-r border-current mb-0.5 -mr-0.5"></div>
@@ -412,8 +486,8 @@ el.textContent = url.replace(/(\/api[^]+|\/*)$/, '/api/embeddings'), openOllama.
       
       <section class="relative relative">
 
-<button class="rounded-r-xl ripple relative bg-gray-100 p-3 shadow-inner"><i class="text-gray-700 inline-block align-middle text-2xl sm:text-2xl mr-1.5 fa fa-save"></i><span class="ml-2 tooltip no-hover no-focus no-focus-within slide sm:show sm:relative absolute">save <code class="text-yellow-700 ml-2 text-xs font-semibold">{query, result}</code></span></button>
-<ul class="border-gray-300 border rounded-lg bg-gray-50 w-40 -ml-10 sm:m-0 sm:w-full text-left bottom-16 absolute tooltip [&>*]:rounded-inherit to-top" style="--arrow-size:5px;">
+<button class="rounded-lg border rounded-r-xl ripple relative bg-gray-100 p-3 shadow-inner"><i class="text-gray-700 inline-block align-middle text-2xl sm:text-2xl mr-1.5 fa fa-save"></i><span class="ml-2 tooltip no-hover no-focus no-focus-within slide sm:show sm:relative absolute">save <code class="text-yellow-700 ml-2 text-xs font-semibold">{query, result}</code></span></button>
+<ul class="border-gray-300 border rounded-lg bg-gray-50 w-40 -ml-10 sm:m-0 sm:w-full text-left bottom-16 absolute tooltip [&>*]:rounded-inherit to-top" style="--arrow-size:5px;--delay: 0.2s;">
  
   <li class="hover:border-current border"><button onclick="let SQL=page.asText(queries), download = `let query_result = {\n\tquery: \`${SQL+=';'.repeat(!/;$/.test(SQL))}\`${page.result?',\n\tresult:'+page.result:''}\n}`; save(new Blob([download], { type: 'application/javascript' }), 'query-result.js', page.result)" class="ripple relative w-full text-left text-sm"><i class="align-middle text-gray-500 border-r border-current inline-block fa fa-download mr-3 p-3 pr-2.5 text-2xl"></i>Download</button></li>
   <li class="hover:border-current border">
@@ -513,7 +587,7 @@ function receive(res, len, html='', btn) {
   ['addr', 'port'].forEach((str, val, id)=>(val=res[id='server_'+str]||page.misc[str])&&(window[id].textContent = val))
 }
 
-debug&&w_Ev('onbeforeunload')(_=>"Prevents unintentional reloads of the page when in debug i.e dev mode");
+debug&&Ev('onbeforeunload')(W)(_=>"Prevents unintentional reloads of the page when in debug i.e dev mode");
 let DOMLoaded, vars=[], crE = (tag, attrs, values)=>(tag = document.createElement(tag), values&&Object.keys(values).forEach(key=>tag[key]=values[key]), attrs.forEach(attr=>tag.setAttribute(attr.name, attr.value)), tag);
 
 w_Ev_dom(function(style, types) {
@@ -556,5 +630,6 @@ w_Ev_scroll(function(y) {
   y = this.scrollY,
   pooled.classList[cLs(y>(/*vars[0]||=*/pooled.offsetTop))]('affix')
 })
+
 </script>
-<datalist id="types"><option value="DECIMAL(<N>, <N>)"></option><option value="FLOAT"></option><option value="BIGINT"></option><option value="INT"></option><option value="SMALLINT"></option><option value="TINYINT"></option><option value="FLOAT(<N>)"></option><option value="BIT(<N>)"></option><option value="JSON"></option><option value="YEAR"></option><option value="DATE"></option><option value="TIME"></option><option value="DATETIME"></option><option value="TIMESTAMP"></option><option value="CHAR(<N>)"></option><option value="BINARY(<N>)"></option><option value="VARCHAR(<N>)"></option><option value="VARBINARY(<N>)"></option><option value="TINYBLOB"></option><option value="TINYTEXT"></option><option value="BLOB"></option><option value="TEXT"></option><option value="MEDIUMBLOB"></option><option value="MEDIUMTEXT"></option><option value="LONGBLOB"></option><option value="LONGTEXT"></option><option value="ENUM(...)"></option><option value=" SET(...)"></option></datalist><datalist id="types"><option value="DECIMAL(<N>, <N>)"></option><option value="FLOAT"></option><option value="BIGINT"></option><option value="INT"></option><option value="SMALLINT"></option><option value="TINYINT"></option><option value="FLOAT(<N>)"></option><option value="BIT(<N>)"></option><option value="JSON"></option><option value="YEAR"></option><option value="DATE"></option><option value="TIME"></option><option value="DATETIME"></option><option value="TIMESTAMP"></option><option value="CHAR(<N>)"></option><option value="BINARY(<N>)"></option><option value="VARCHAR(<N>)"></option><option value="VARBINARY(<N>)"></option><option value="TINYBLOB"></option><option value="TINYTEXT"></option><option value="BLOB"></option><option value="TEXT"></option><option value="MEDIUMBLOB"></option><option value="MEDIUMTEXT"></option><option value="LONGBLOB"></option><option value="LONGTEXT"></option><option value="ENUM(...)"></option><option value=" SET(...)"></option></datalist></body></html>
+</body></html>
